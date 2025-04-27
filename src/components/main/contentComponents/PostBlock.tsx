@@ -3,26 +3,21 @@ import { useEffect, useState } from "react";
 import { AiOutlineClose } from "react-icons/ai";
 import defaultProfile from "../../../Assets/defaultProfile.png";
 import GalleryIcon from "../../../Assets/GalleryIcon.png";
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { dataToBePostType } from "@/utils/utils";
+import { createDocument, createFile, getFile } from "@/utils/db";
 
-type PostBlockProps = {
-  postMode: boolean;
-  setPostMode: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
+const PostBlock = ({ postMode, setPostMode, userData }: any) => {
   const { setOpen } = useSidebar();
   const [postText, setPostText] = useState<string>("");
-  const [Image, setImage] = useState<any>(null);
-  const [dataToBePost, setDataToBePost] = useState<dataToBePostType>(undefined);
+  const [localImage, setLocalImage] = useState<any>(null);
+  const [imageFile, setImageFile] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
   const textareaRef = useRef<any>(null);
   const imageInputRef = useRef<any>(null);
-
-  useEffect(() => {
-    console.log(dataToBePost);
-  }, [dataToBePost]);
 
   useEffect(() => {
     if (postMode) {
@@ -30,10 +25,78 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
     }
   }, [postMode]);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setError(false);
+      clearTimeout(timeout);
+    }, 5000);
+  }, [error]);
+
   const handleInput = () => {
     const textarea = textareaRef.current;
     textarea.style.height = "auto"; // Reset height
     textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
+  };
+
+  const handlePost = async () => {
+    setLoading(true);
+    if (imageFile && Image) {
+      handleCreateFile();
+    } else {
+      handleCreateDocument(undefined);
+    }
+  };
+
+  const handleGetFile = async (fileId: string) => {
+    try {
+      const response = getFile(fileId);
+      return response;
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Error: couldn't get file");
+      setError(true);
+    }
+  };
+
+  const handleCreateFile = async () => {
+    try {
+      const response = await createFile(imageFile);
+      const result: any = await handleGetFile(response.$id);
+      return handleCreateDocument(result.href);
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Error: couldn't create File");
+      setError(true);
+    }
+  };
+
+  const handleCreateDocument = async (imageUrl: string | undefined) => {
+    try {
+      await createDocument({
+        userId: userData.userId,
+        caption: postText,
+        imageURL: imageUrl,
+        comments: 0,
+        likes: [],
+        user: {
+          userId: userData.userId,
+          email: userData.email,
+          name: userData.name || userData.given_name,
+          picture: userData.picture,
+          email_verified: userData.email_verified,
+        },
+      });
+      /*  await createUserDocument(userData); */
+      setLoading(false);
+      setPostText("");
+      setLocalImage(null);
+      setPostMode(false);
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Error: couldn't create ducument");
+      setError(true);
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,6 +111,15 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
         onClick={() => setPostMode(false)}
       ></div>
 
+      {/* Error Notification */}
+      <div
+        className={`absolute bottom-[15px] bg-red-500 text-gray-200 w-fit p-3 z-50 rounded-l-lg font-[arial] transition-all duration-[0.5s] text-[14px] ${
+          error ? "right-0" : "left-full"
+        }`}
+      >
+        <p>{errorMessage}</p>
+      </div>
+
       {/* Main Block */}
       <div className="fixed bg-white w-[95%] h-[90%] md:w-[500px] md:h-[96%] rounded-lg flex flex-col ">
         {/* Main Block Header */}
@@ -55,7 +127,10 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
           <p className="flex-1 text-center text-[20px]">Create Post</p>
           <div
             className=" font-extrabold  bg-gray-300 p-2 rounded-full hover:bg-gray-200 cursor-pointer"
-            onClick={() => setPostMode(false)}
+            onClick={() => {
+              setPostMode(false);
+              setOpen(true);
+            }}
           >
             <AiOutlineClose className="text-[25px] text-gray-400" />
           </div>
@@ -67,19 +142,22 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
             {/* text Area Block */}
             <div className="flex items-center gap-2">
               <img
-                src={defaultProfile}
-                alt="Profile Picture"
+                src={userData ? userData.picture : defaultProfile}
+                alt="Avatar"
                 width={45}
                 height={45}
+                className="rounded-full"
               />
-              <p>Salihu Abubakar</p>
+              <p>{userData ? userData.name : "null"}</p>
             </div>
 
             <textarea
               ref={textareaRef}
               onInput={handleInput}
               className="w-full resize-none overflow-hidden p-2 outline-none font-normal"
-              placeholder="What's on your mind?"
+              placeholder={`what's on your mind, ${
+                userData ? userData.name : " "
+              }?`}
               rows={1}
               value={postText}
               onChange={(e) => setPostText(e.target.value)}
@@ -95,10 +173,10 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
             onChange={(e) => {
               if (e.target.files) {
                 const file = e.target.files[0];
-
+                setImageFile(file);
                 if (file) {
                   const url = URL.createObjectURL(file);
-                  setImage((prev: string) => {
+                  setLocalImage((prev: string) => {
                     if (prev) URL.revokeObjectURL(prev);
                     return url;
                   });
@@ -106,11 +184,11 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
               }
             }}
           />
-          {Image ? (
+          {localImage ? (
             <div className=" relative border-[2px] p-2 rounded-md bg-gray-200 overflow-auto ">
               <div>
                 <img
-                  src={Image}
+                  src={localImage}
                   alt="image you uploaded"
                   className="size-full rounded-md"
                 />
@@ -119,9 +197,9 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
               <button
                 className="absolute top-[15px] right-[15px] bg-gray-200 rounded-full p-[2px] cursor-pointer"
                 onClick={() => {
-                  if (Image) {
-                    URL.revokeObjectURL(Image);
-                    setImage("");
+                  if (localImage) {
+                    URL.revokeObjectURL(localImage);
+                    setLocalImage("");
                   }
 
                   if (imageInputRef.current) {
@@ -148,15 +226,19 @@ const PostBlock: React.FC<PostBlockProps> = ({ postMode, setPostMode }) => {
               </div>
             </label>
           )}
-
           {/* post Button */}
-          {postText !== "" || Image ? (
+          {postText !== "" || localImage ? (
             <Button
-              className={`cursor-pointer font-bold text-[17px] opacity-[0.6] border-none`}
-              onClick={() =>
-                setDataToBePost({ text: postText, image: Image || "" })
-              }
+              className={`cursor-pointer font-bold text-[17px] opacity-[0.8] border-none ${
+                loading ? "pointer-events-none opacity-[0.6]" : ""
+              }`}
+              onClick={() => handlePost()}
             >
+              <div
+                className={`w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin ${
+                  loading ? "block" : "hidden"
+                }`}
+              ></div>
               Post
             </Button>
           ) : (

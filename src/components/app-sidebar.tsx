@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Minus, Plus } from "lucide-react";
-import webIcon from "../Assets/websiteIcon.png";
+import webIcon from "../Assets/websiteIcon2.png";
 
 import { SearchForm } from "@/components/search-form";
 import {
@@ -47,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="./">
-                <div className=" w-full">
+                <div className="w-full">
                   <img src={webIcon} alt="Website Icon" width={150} />
                 </div>
               </a>
