@@ -7,20 +7,20 @@ import commentIcon from "../../Assets/comments-icons.png";
 import moreIcon from "../../Assets/more-icon.png";
 
 import { useSidebar } from "../ui/sidebar";
-import {
-  AiOutlineComment,
-  AiOutlineSetting,
-  AiOutlineMore,
-} from "react-icons/ai";
+import { AiOutlineComment } from "react-icons/ai";
 
 import { listDocument, updateDocument } from "@/utils/db";
 import { client } from "@/utils/appWrite";
 import { ThumbsUp } from "lucide-react";
+import CommentMode from "./contentComponents/CommentMode";
 
 const Content = ({ userData }: any) => {
   const [postMode, setPostMode] = useState<boolean>(false);
-  const { isMobile } = useSidebar();
+  const [commentMode, setCommentMode] = useState<boolean>(false);
+  const [postToComment, setPostToComment] = useState<any>(null);
+  const { isMobile, setOpen } = useSidebar();
   const [posts, setPosts] = useState<any>([]);
+  const [activeMore, setActiveMore] = useState<string>("");
 
   useEffect(() => {
     handleListPosts();
@@ -63,7 +63,34 @@ const Content = ({ userData }: any) => {
 
   const handlePostMode = () => {
     if (!userData) return alert("Login/SignUp to join the community");
-    setPostMode(postMode ? false : true);
+    setPostMode(true);
+  };
+
+  const handleCommentMode = (post: any) => {
+    if (!userData) return alert("Login/SignUp to join the community");
+    setCommentMode(true);
+    setOpen(false);
+    setPostToComment(post);
+  };
+
+  const handleMore = (id: string) => {
+    posts.map((post: any) => {
+      const moreBlock: HTMLElement | null = document.getElementById(post.$id);
+      if (moreBlock) {
+        moreBlock.style.opacity = "0";
+        moreBlock.style.pointerEvents = "none";
+      }
+    });
+
+    const activeMoreBlock: HTMLElement | null = document.getElementById(id);
+
+    if (activeMore === id) return setActiveMore("");
+
+    if (activeMoreBlock) {
+      activeMoreBlock.style.opacity = "1";
+      activeMoreBlock.style.pointerEvents = "auto";
+      setActiveMore(id);
+    }
   };
 
   /*  console.log(posts); */
@@ -180,17 +207,20 @@ const Content = ({ userData }: any) => {
                   </div>
 
                   <div className="relative">
-                    <div className="p-2 rounded-full hover:bg-gray-300 cursor-pointer ">
+                    <div
+                      className="p-2 rounded-full hover:bg-gray-300 cursor-pointer "
+                      onClick={() => handleMore(post.$id)}
+                    >
                       <img src={moreIcon} alt="moreIcon" />
                     </div>
 
                     {/* postMore */}
-                    {/* <div
+                    <div
                       className="w-[350px] h-[150px] absolute bg-gray-300 right-0 top-full p-2 rounded-lg opacity-0 pointer-events-none"
                       id={post.$id}
                     >
                       {" "}
-                    </div> */}
+                    </div>
                   </div>
                 </section>
 
@@ -265,7 +295,10 @@ const Content = ({ userData }: any) => {
                       </button>
                     )}
 
-                    <button className="cursor-pointer flex-1 text-[16px] text-gray-500 flex gap-1 items-center justify-center hover:bg-gray-200 rounded-md py-1">
+                    <button
+                      className="cursor-pointer flex-1 text-[16px] text-gray-500 flex gap-1 items-center justify-center hover:bg-gray-200 rounded-md py-1"
+                      onClick={() => handleCommentMode(post)}
+                    >
                       <AiOutlineComment className="text-[23px]" />
                       Comment
                     </button>
@@ -277,14 +310,20 @@ const Content = ({ userData }: any) => {
         </ul>
       </main>
 
-      {/* outlet for post Input */}
+      {/* outlet for post Block */}
       <PostBlock
         postMode={postMode}
         setPostMode={setPostMode}
         userData={userData}
       />
 
-      {/* Posts */}
+      {/* outlet for comment Block */}
+      <CommentMode
+        commentMode={commentMode}
+        setCommentMode={setCommentMode}
+        postToComment={postToComment}
+        userData={userData}
+      />
     </main>
   );
 };

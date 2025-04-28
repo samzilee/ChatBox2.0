@@ -103,17 +103,20 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
     <div
       className={` ${
         postMode ? "block" : "hidden"
-      } fixed top-0 bottom-0 left-0 right-0 flex items-center justify-center`}
+      } fixed top-0 bottom-0 left-0 right-0 flex items-center justify-center z-50`}
     >
       {/* BackGround  */}
       <div
         className={`fixed border top-0 bottom-0 right-0 left-0 bg-gray-200/60 flex justify-center items-center`}
-        onClick={() => setPostMode(false)}
+        onClick={() => {
+          setPostMode(false);
+          setOpen(true);
+        }}
       ></div>
 
       {/* Error Notification */}
       <div
-        className={`absolute bottom-[15px] bg-red-500 text-gray-200 w-fit p-3 z-50 rounded-l-lg font-[arial] transition-all duration-[0.5s] text-[14px] ${
+        className={`absolute bottom-[15px] bg-red-500 text-gray-200 w-fit p-3  rounded-l-lg font-[arial] transition-all duration-[0.5s] text-[14px] ${
           error ? "right-0" : "left-full"
         }`}
       >
@@ -132,7 +135,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
               setOpen(true);
             }}
           >
-            <AiOutlineClose className="text-[25px] text-gray-400" />
+            <AiOutlineClose className="text-[25px] text-gray-500" />
           </div>
         </header>
 
