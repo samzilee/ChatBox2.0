@@ -13,6 +13,7 @@ const Main = () => {
   const [userDataGoogle, setUserDataGoogle] = useState<object | undefined>(
     undefined
   );
+  const [contentLoaded, setContentLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     handleUserData();
@@ -21,33 +22,41 @@ const Main = () => {
   const handleUserData = async () => {
     try {
       const data = await getUserData();
+
       setUserInfo({
         userId: data.userId,
         accessToken: data.providerAccessToken,
+        providerAccessTokenExpiry: data.providerAccessTokenExpiry,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    handleProfileRequest();
+    if (userInfo) {
+      if (new Date(userInfo.providerAccessTokenExpiry) < new Date()) {
+        window.alert("Your session has ended");
+        signOut();
+      } else {
+        handleProfileRequest();
+      }
+    }
   }, [userInfo]);
 
   const handleProfileRequest = async () => {
-    if (!userInfo) return;
     try {
       const data = await fetch(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${userInfo.accessToken}`,
+            Authorization: `Bearer ${userInfo?.accessToken}`,
           },
         }
       );
       const response = await data.json();
-      if (response.error) return signOut();
+      /* if (response.error) return signOut(); */
       setUserDataGoogle(() => {
         return { ...response, ...userInfo };
       });
@@ -56,24 +65,24 @@ const Main = () => {
     }
   };
 
-  /*   console.log(userData); */
-
   return (
     <div>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
           <Header userData={userDataGoogle} />
-          <Content userData={userDataGoogle} />
 
-          {/*  <div className="flex flex-1 flex-col gap-4 p-4">
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
+          <Content
+            userData={userDataGoogle}
+            setContentLoaded={setContentLoaded}
+            contentLoaded={contentLoaded}
+          />
+
+          {contentLoaded ? null : (
+            <div className="h-full p-2 flex justify-center items-center bg-gray-200">
+              <div className="h-[70px] w-[70px] border-[6px] border-gray-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
-          </div> */}
+          )}
         </SidebarInset>
       </SidebarProvider>
     </div>

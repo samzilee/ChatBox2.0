@@ -19,6 +19,7 @@ async function getUserData() {
    return session;
 }
 
+
 async function signOut() {
     const account = new Account(client);
     const result = await account.deleteSession("current")

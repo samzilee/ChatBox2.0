@@ -1,9 +1,16 @@
-import { client, databases, storage } from "./appWrite";
+import { databases, storage } from "./appWrite";
+
 import { ID, Query } from "appwrite";
 
-const createDocument = (data:any) => {
-    const promise = databases.createDocument("chat_box", "posts", ID.unique(), data)
+const createDocument = (collectionID:string,data:any) => {
+    const promise = databases.createDocument("chat_box", collectionID, ID.unique(), data)
     return promise;
+}
+
+
+const deleteDocument = ( collectionID:string ,documentID:string) => {
+const result = databases.deleteDocument("chat_box", collectionID, documentID)
+    return result;
 }
 
 
@@ -17,19 +24,31 @@ const getFile = (fileId:string) => {
     const result = storage.getFileView("68098ea3001135e829f7", fileId )
     return result;
 }
+const deleteFile = (fileId:string) => {
+    const result = storage.deleteFile("68098ea3001135e829f7", fileId);
+    return result;
+}
 
  const listDocument = async() => {
     const result = await databases.listDocuments("chat_box","posts", [Query.orderDesc("$createdAt")])
     return result;
 }
 
-const updateDocument = async(documentID:string, data:any) => {
+const updateLikes = async(documentID:string, data:any) => {
     const result = await databases.updateDocument("chat_box","posts",documentID, {
         likes:data
     })
     return result;
 }
 
+const updateComments = async (documentID:string,data:any) => {
+    const result = await databases.updateDocument("chat_box", "posts", documentID, {
+        comments: data
+    })
+    return result;
+}
 
-export {createDocument, createFile, getFile, listDocument, updateDocument}
+
+
+export {createDocument, createFile, getFile, deleteFile, listDocument, updateLikes, updateComments, deleteDocument}
 

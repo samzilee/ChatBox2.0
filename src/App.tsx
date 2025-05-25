@@ -8,6 +8,12 @@ const App = () => {
     {
       path: "/",
       element: <Main />,
+      children: [
+        {
+          path: "/chats/channel",
+          element: <div>Hi</div>,
+        },
+      ],
     },
     {
       path: "/logIn",

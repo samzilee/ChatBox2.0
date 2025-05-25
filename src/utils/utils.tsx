@@ -7,4 +7,5 @@ export type loginFormData = {
 export type userAppWriteInfo = {
   userId: string;
   accessToken: string;
+  providerAccessTokenExpiry: string;
 };

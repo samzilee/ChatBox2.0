@@ -26,12 +26,24 @@ import {
 const data = {
   navMain: [
     {
-      title: "EveryThing",
-      url: "#",
+      title: "Chats",
+      url: "/chats",
+      items: [
+        {
+          title: "Channels",
+          url: "/chats/channel",
+          isActive: false,
+        },
+      ],
+    },
+
+    {
+      title: "More",
+      url: "/more",
       items: [
         {
           title: "Settings",
-          url: "#",
+          url: "/more/settings",
           isActive: false,
         },
       ],
@@ -56,6 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
         <SearchForm />
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>

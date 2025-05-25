@@ -15,6 +15,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [fileType, setFileType] = useState<string>("");
 
   const textareaRef = useRef<any>(null);
   const imageInputRef = useRef<any>(null);
@@ -24,6 +25,13 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
       setOpen(false);
     }
   }, [postMode]);
+
+  useEffect(() => {
+    if (!imageFile) return;
+    setFileType(() => {
+      return imageFile.type.includes("video") ? "video" : "picture";
+    });
+  }, [imageFile]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -43,7 +51,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
     if (imageFile && Image) {
       handleCreateFile();
     } else {
-      handleCreateDocument(undefined);
+      handleCreateDocument(undefined, undefined);
     }
   };
 
@@ -62,7 +70,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
     try {
       const response = await createFile(imageFile);
       const result: any = await handleGetFile(response.$id);
-      return handleCreateDocument(result.href);
+      handleCreateDocument(result.href, response.$id);
     } catch (error) {
       console.log(error);
       setErrorMessage("Error: couldn't create File");
@@ -70,13 +78,18 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
     }
   };
 
-  const handleCreateDocument = async (imageUrl: string | undefined) => {
+  const handleCreateDocument = async (
+    file: string | undefined,
+    fileID: string | undefined
+  ) => {
     try {
-      await createDocument({
+      await createDocument("posts", {
         userId: userData.userId,
         caption: postText,
-        imageURL: imageUrl,
-        comments: 0,
+        fileId: fileID,
+        fileUrl: file,
+        fileType: fileType === "video" ? "video" : "picture",
+        comments: [],
         likes: [],
         user: {
           userId: userData.userId,
@@ -91,11 +104,15 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
       setPostText("");
       setLocalImage(null);
       setPostMode(false);
+      setImageFile(null);
+      const body = document.body;
+      body.style.overflow = "auto";
     } catch (error) {
       console.log(error);
       setErrorMessage("Error: couldn't create ducument");
       setError(true);
       setLoading(false);
+      setImageFile(null);
     }
   };
 
@@ -111,6 +128,8 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
         onClick={() => {
           setPostMode(false);
           setOpen(true);
+          const body = document.body;
+          body.style.overflow = "auto";
         }}
       ></div>
 
@@ -133,6 +152,8 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
             onClick={() => {
               setPostMode(false);
               setOpen(true);
+              const body = document.body;
+              body.style.overflow = "auto";
             }}
           >
             <AiOutlineClose className="text-[25px] text-gray-500" />
@@ -188,13 +209,21 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
             }}
           />
           {localImage ? (
-            <div className=" relative border-[2px] p-2 rounded-md bg-gray-200 overflow-auto ">
+            <div className="relative border-[2px] p-2 rounded-md bg-gray-200 overflow-auto">
               <div>
-                <img
-                  src={localImage}
-                  alt="image you uploaded"
-                  className="size-full rounded-md"
-                />
+                {imageFile && imageFile.type.includes("video") ? (
+                  <video
+                    src={localImage}
+                    controls
+                    className="size-full rounded-md"
+                  />
+                ) : (
+                  <img
+                    src={localImage}
+                    alt="image you uploaded"
+                    className="size-full rounded-md"
+                  />
+                )}
               </div>
 
               <button
@@ -225,7 +254,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
                   width={35}
                   height={35}
                 />
-                <p>Add Photo</p>
+                <p>Add Photo/video</p>
               </div>
             </label>
           )}

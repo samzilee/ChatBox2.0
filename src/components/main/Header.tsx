@@ -80,7 +80,7 @@ const Header = ({ userData }: any) => {
     >
       {/* Right Side of the header */}
       <div className="flex items-center gap-2 ">
-        <div className=" p-1 hover:bg-gray-100">
+        <div className=" p-1 hover:bg-gray-100 cursor-pointer">
           <AiOutlineMenu
             onClick={
               isMobile
