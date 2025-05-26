@@ -1,12 +1,15 @@
 import { AppSidebar } from "../app-sidebar";
 import { SidebarInset, SidebarProvider } from "../ui/sidebar";
-import Content from "./Content";
-import Header from "./Header";
 import { getUserData, signOut } from "../../utils/auth.utils.ts";
 import { useEffect, useState } from "react";
 import { userAppWriteInfo } from "@/utils/utils.tsx";
 
-const Main = () => {
+import Content from "./Content";
+import Header from "./Header";
+import ChatRoom from "./ChatRoom.tsx";
+import Alert from "../Alert.tsx";
+
+const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
     undefined
   );
@@ -14,6 +17,8 @@ const Main = () => {
     undefined
   );
   const [contentLoaded, setContentLoaded] = useState<boolean>(false);
+  const [sessionExpired, setSessionExpired] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
 
   useEffect(() => {
     handleUserData();
@@ -36,7 +41,10 @@ const Main = () => {
   useEffect(() => {
     if (userInfo) {
       if (new Date(userInfo.providerAccessTokenExpiry) < new Date()) {
-        window.alert("Your session has ended");
+        setSessionExpired(true);
+        setAlertMessage(
+          "You're logged out of your account. Please login again."
+        );
         signOut();
       } else {
         handleProfileRequest();
@@ -56,7 +64,6 @@ const Main = () => {
         }
       );
       const response = await data.json();
-      /* if (response.error) return signOut(); */
       setUserDataGoogle(() => {
         return { ...response, ...userInfo };
       });
@@ -72,17 +79,25 @@ const Main = () => {
         <SidebarInset>
           <Header userData={userDataGoogle} />
 
-          <Content
-            userData={userDataGoogle}
-            setContentLoaded={setContentLoaded}
-            contentLoaded={contentLoaded}
-          />
-
-          {contentLoaded ? null : (
-            <div className="h-full p-2 flex justify-center items-center bg-gray-200">
-              <div className="h-[70px] w-[70px] border-[6px] border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          {path === "home" ? (
+            <div className="h-full ">
+              <Content
+                userData={userDataGoogle}
+                setContentLoaded={setContentLoaded}
+                contentLoaded={contentLoaded}
+              />
             </div>
-          )}
+          ) : null}
+
+          {path === "chatroom" ? (
+            <div className="h-full">
+              <ChatRoom />
+            </div>
+          ) : null}
+
+          {sessionExpired ? (
+            <Alert message={alertMessage} setActive={setSessionExpired} />
+          ) : null}
         </SidebarInset>
       </SidebarProvider>
     </div>

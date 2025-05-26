@@ -75,12 +75,12 @@ const Header = ({ userData }: any) => {
 
   return (
     <header
-      className="border-b border-gray-200 flex justify-between items-center p-2 px-3 h-[58px] sticky top-0 bg-white z-10
+      className="border-b border-border flex justify-between items-center p-2 px-3 h-[58px] sticky top-0 bg-background z-10
     "
     >
       {/* Right Side of the header */}
       <div className="flex items-center gap-2 ">
-        <div className=" p-1 hover:bg-gray-100 cursor-pointer">
+        <div className=" p-2 hover:bg-accent text-foreground cursor-pointer rounded">
           <AiOutlineMenu
             onClick={
               isMobile
@@ -103,9 +103,9 @@ const Header = ({ userData }: any) => {
         {userData ? (
           <img
             loading="lazy"
-            src={userData ? userData.picture : defaultProfile}
+            src={userData.picture}
             alt="avatar"
-            className="w-[40px] rounded-full cursor-pointer"
+            className="w-[40px] rounded-full cursor-pointer bg-card"
             onClick={handleMenu}
           />
         ) : (
@@ -131,7 +131,7 @@ const Header = ({ userData }: any) => {
         )}
 
         <div
-          className={`absolute bg-gray-300 right-0 top-[45px] rounded-lg overflow-hidden ${
+          className={`absolute bg-card text-card-foreground right-0 top-[45px] rounded-lg overflow-hidden ${
             accBlock ? "block" : "hidden"
           }`}
           ref={accBlockRef}
@@ -140,15 +140,15 @@ const Header = ({ userData }: any) => {
             <div className="w-[80px] h-[80px]">
               <img
                 loading="lazy"
-                src={userData ? userData.picture : defaultProfile}
+                src={userData?.picture}
                 alt="Avatar"
-                className=" rounded-full size-full"
+                className=" rounded-full size-full bg-background"
               />
             </div>
             <div className="flex flex-col">
-              <p>Samzi</p>
-              <p className="text-gray-600 text-[15px]">
-                salihukoko40@gmail.com
+              <p>{userData?.name || userData?.given_name}</p>
+              <p className="text-muted-foreground text-[15px]">
+                {userData?.email}
               </p>
               <Button
                 className=" cursor-pointer"
@@ -161,16 +161,27 @@ const Header = ({ userData }: any) => {
               </Button>
             </div>
           </section>
-          <section className="border bg-gray-400 p-3 flex justify-between">
-            <Button variant={"outline"} size="sm" className=" cursor-pointer">
-              <img src={settingsIcon} alt="icon" width={20} height={20} />
+          <section className="bg-popover p-3 flex justify-between ">
+            <Button
+              variant={"secondary"}
+              size="sm"
+              className="cursor-pointer border-none group"
+            >
+              <img
+                src={settingsIcon}
+                loading="lazy"
+                alt="icon"
+                width={20}
+                height={20}
+                className=" group-hover:animate-spin "
+              />
               Settings
             </Button>
             <Button
               variant={"destructive"}
               size="sm"
               className=" cursor-pointer"
-              onClick={handleSignOut}
+              onClick={() => handleSignOut()}
             >
               <img src={signOutIcon} alt="icon" width={20} height={20} />
               Sign Out

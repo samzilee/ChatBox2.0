@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
-import defaultProfile from "../../Assets/defaultProfile.png";
+
 import GalleryIcon from "../../Assets/GalleryIcon.png";
 import PostBlock from "./contentComponents/PostBlock";
 import thumbsUpIcon from "../../Assets/thumbs-up-icon.png";
 import commentIcon from "../../Assets/comments-icons.png";
-import moreIcon from "../../Assets/more-icon.png";
-import reportIcon from "../../Assets/Report-icon.png";
-import bin from "../../Assets/bin-icon.png";
 
 import { useSidebar } from "../ui/sidebar";
 import { AiOutlineComment } from "react-icons/ai";
-
+import { MdAccountCircle } from "react-icons/md";
 import {
   listDocument,
   updateLikes,
@@ -18,9 +15,15 @@ import {
   deleteFile,
 } from "@/utils/db";
 import { client } from "@/utils/appWrite";
-import { ThumbsUp } from "lucide-react";
-import CommentMode from "./contentComponents/CommentMode";
-import { Outlet } from "react-router-dom";
+import {
+  MessageCircleQuestion,
+  MoreHorizontalIcon,
+  ThumbsUp,
+  Trash2,
+} from "lucide-react";
+import CommentMode from "./contentComponents/CommentBlock";
+import { Button } from "../ui/button";
+import Alert from "../Alert";
 
 const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
   const [postMode, setPostMode] = useState<boolean>(false);
@@ -30,12 +33,13 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
   const [posts, setPosts] = useState<any>([]);
   const [activeMore, setActiveMore] = useState<string>("");
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [sendAlert, setSendAlert] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
 
   useEffect(() => {
+    setContentLoaded(false);
     handleListPosts();
-  }, []);
 
-  useEffect(() => {
     const unsubscribe = client.subscribe(
       `databases.chat_box.collections.posts.documents`,
       (response: any) => {
@@ -79,11 +83,19 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
     } catch (error) {
       console.log(error);
       setContentLoaded(true);
+      setSendAlert(true);
+      setAlertMessage(
+        "Error Loading Posts, Check your internet connection and try again"
+      );
     }
   };
 
   const handlePostMode = () => {
-    if (!userData) return alert("Login/SignUp to join the community");
+    if (!userData)
+      return (
+        setSendAlert(true),
+        setAlertMessage("Login or SignUp to join the community")
+      );
     setPostMode(true);
     const body = document.body;
     body.style.overflow = "hidden";
@@ -94,8 +106,10 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
     setDeleting(true);
     try {
       await deleteDocument("posts", postId);
+      if (fileId) {
+        await deleteFile(fileId);
+      }
       await handleListPosts();
-      await deleteFile(fileId);
       setDeleting(false);
       if (moreBlock) {
         moreBlock.style.opacity = "0";
@@ -113,7 +127,11 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
   };
 
   const handleCommentMode = (post: any) => {
-    if (!userData) return alert("Login/SignUp to join the community");
+    if (!userData)
+      return (
+        setSendAlert(true),
+        setAlertMessage("Login or SignUp to join the community")
+      );
     setCommentMode(true);
     setOpen(false);
     setPostToComment(post);
@@ -122,7 +140,11 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
   };
 
   const handleMore = (id: string) => {
-    if (!userData) return alert("Login/SignUp to join the community");
+    if (!userData)
+      return (
+        setSendAlert(true),
+        setAlertMessage("Login or SignUp to join the community")
+      );
     posts.map((post: any) => {
       const moreBlock: HTMLElement | null = document.getElementById(post.$id);
       if (moreBlock) {
@@ -152,7 +174,11 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
   };
 
   const handleLike = async (postId: string, userId: any) => {
-    if (!userData) return alert("Login/SignUp to join the community");
+    if (!userData)
+      return (
+        setSendAlert(true),
+        setAlertMessage("Login or SignUp to join the community")
+      );
     try {
       const filterPost = await posts.filter((post: any) => post.$id === postId);
 
@@ -187,250 +213,264 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
     return `${dayMonth} at ${time}`;
   }
 
-  if (posts.length === 0 && !contentLoaded)
-    return <div className="bg-gray-200 flex flex-col"></div>;
+  /* HTML To Render */
+  if (!contentLoaded && posts.length === 0) {
+    return (
+      <div className="h-full p-2 flex justify-center items-center bg-background">
+        <div className="h-[70px] w-[70px] border-[6px] border-foreground border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  } else {
+    return (
+      <main className="w-full h-full px-1 bg-background flex flex-col gap-5">
+        {/* Alert */}
+        {sendAlert ? (
+          <Alert message={alertMessage} setActive={setSendAlert} />
+        ) : null}
 
-  return (
-    <main className="w-full h-full px-1 bg-gray-200 flex flex-col gap-5">
-      {/* Post Input */}
-      <div className="w-full rounded-md p-2 mt-5 bg-white flex items-center gap-2">
-        <div className="w-[43px] cursor-pointer rounded-full">
-          <img
-            src={userData ? userData.picture : defaultProfile}
-            alt="Avatar"
-            className="size-full rounded-full"
-          />
+        {/* Post Input */}
+        <div className="w-full rounded-md p-2 mt-5 bg-card text-card-foreground flex items-center gap-2">
+          <div className="w-[43px] cursor-pointer rounded-full">
+            {userData ? (
+              <img
+                loading="lazy"
+                src={userData.picture}
+                alt="Avatar"
+                className="size-full rounded-full bg-background"
+              />
+            ) : (
+              <MdAccountCircle className="size-full" />
+            )}
+          </div>
+
+          <button
+            className="bg-background text-muted-foreground px-3 py-2 rounded-full flex-1 text-start cursor-pointer text-[15px] text-nowrap overflow-auto transition-colors duration-[0.3s] hover:bg-muted"
+            onClick={() => handlePostMode()}
+          >
+            {isMobile ? (
+              <p>What's on your mind?</p>
+            ) : (
+              <p>What's on your mind, {userData ? userData.name : "{Name}"}?</p>
+            )}
+          </button>
+
+          <button
+            className="flex items-center cursor-pointer"
+            onClick={() => handlePostMode()}
+          >
+            <img
+              loading="lazy"
+              src={GalleryIcon}
+              alt="Gallery Icon"
+              width={25}
+              height={25}
+            />
+            <p className="font-semibold">Photo/video</p>
+          </button>
         </div>
 
-        <button
-          className="bg-gray-200 px-3 py-2 rounded-full flex-1 text-start cursor-pointer hover:bg-gray-300 text-[15px] text-nowrap overflow-auto"
-          onClick={() => handlePostMode()}
-        >
-          {isMobile ? (
-            <p>What's on your mind?</p>
-          ) : (
-            <p>What's on your mind, {userData ? userData.name : "{Name}"}?</p>
-          )}
-        </button>
+        {posts.length === 0 ? (
+          <div className="bg-background text-foreground flex justify-center font-bold">
+            <p>Nothing To See Here...</p>
+          </div>
+        ) : (
+          <main className=" flex-1 flex justify-center py-5 px-1">
+            <ul className=" md:w-[470px] w-full flex flex-col gap-5">
+              {posts.map((post: any, index: number) => {
+                return (
+                  <li
+                    className="bg-card text-card-foreground flex flex-col gap-2 rounded-[20px]"
+                    key={index}
+                  >
+                    <section className="flex items-center gap-2 px-4 pt-5">
+                      <div className="relative group cursor-pointer">
+                        {post.user && post.user.picture ? (
+                          <img
+                            loading="lazy"
+                            src={post.user.picture}
+                            alt="avatar"
+                            width={45}
+                            height={45}
+                            className=" rounded-full bg-background"
+                          />
+                        ) : (
+                          <MdAccountCircle size={45} />
+                        )}
+                        {/* ToolTip */}
+                        <p className="absolute bg-gray-600 text-gray-200 font-normal text-[10px] px-1 scale-0 group-hover:scale-100 transition-all duration-[0.5s]">
+                          {post.user?.email}
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">
+                          {post.user?.name}
+                        </p>
+                        <p className="text-muted-foreground text-[13px]">
+                          {formatDate(new Date(post.$createdAt))}
+                        </p>
+                      </div>
 
-        <button
-          className="flex items-center cursor-pointer"
-          onClick={() => handlePostMode()}
-        >
-          <img
-            loading="lazy"
-            src={GalleryIcon}
-            alt="Gallery Icon"
-            width={25}
-            height={25}
-          />
-          <p className="font-semibold">Photo/video</p>
-        </button>
-      </div>
-
-      <main className=" flex-1 flex justify-center py-5 px-1">
-        <ul className=" md:w-[470px] w-full flex flex-col gap-5">
-          {posts.map((post: any, index: number) => {
-            return (
-              <li
-                className="bg-white flex flex-col gap-2 rounded-[20px]"
-                key={index}
-              >
-                <section className="flex items-center gap-2 px-4 pt-5">
-                  <div className="relative group cursor-pointer">
-                    {post.user && post.user.picture ? (
-                      <img
-                        loading="lazy"
-                        src={post.user.picture}
-                        alt="avatar"
-                        width={45}
-                        height={45}
-                        className=" rounded-full"
-                      />
-                    ) : (
-                      <img
-                        loading="lazy"
-                        src={defaultProfile}
-                        alt="avatar"
-                        width={45}
-                        height={45}
-                        className=" rounded-full"
-                      />
-                    )}
-                    {/* ToolTip */}
-                    <p className="absolute bg-gray-600 text-gray-200 font-normal text-[10px] px-1 scale-0 group-hover:scale-100 transition-all duration-[0.5s]">
-                      {post.user?.email}
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">{post.user?.name}</p>
-                    <p className="text-gray-500 text-[13px]">
-                      {formatDate(new Date(post.$createdAt))}
-                    </p>
-                  </div>
-
-                  <div className="relative">
-                    <div
-                      className={`p-2 rounded-full hover:bg-gray-300 cursor-pointer ${
-                        activeMore === post.$id ? "bg-gray-300" : ""
-                      } `}
-                      onClick={() => handleMore(post.$id)}
-                    >
-                      <img src={moreIcon} alt="moreIcon" />
-                    </div>
-
-                    {/* postMore */}
-                    <div
-                      className=" absolute bg-gray-200 right-0  rounded-lg opacity-0 pointer-events-none text-nowrap p-2 text-gray-600 font-normal w-[160px] flex flex-col z-[8] transition-all duration-[0.3s]"
-                      id={post.$id}
-                    >
-                      <button
-                        className="w-full flex gap-2 items-center cursor-pointer  hover:bg-gray-300 p-2 rounded-md"
-                        onClick={() => handleReportPost(post)}
-                      >
-                        <img
-                          src={reportIcon}
-                          alt="reportIcon"
-                          width={18}
-                          height={18}
-                        />
-                        <p>Report Post</p>
-                      </button>
-                      {post.userId === userData?.userId ? (
-                        <button
-                          className="w-full flex gap-2 items-center cursor-pointer  hover:bg-gray-300 p-2 rounded-md"
-                          onClick={() =>
-                            handleDeletePost(post.$id, post.fileId)
-                          }
+                      <div className="relative">
+                        <div
+                          className={`p-2 rounded-full hover:bg-background cursor-pointer text-foreground ${
+                            activeMore === post.$id ? "bg-background" : ""
+                          } `}
+                          onClick={() => handleMore(post.$id)}
                         >
-                          {deleting ? (
-                            <div className="w-5 h-5 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <img
-                              src={bin}
-                              alt="bin icon"
-                              width={20}
-                              height={20}
-                            />
-                          )}
+                          <MoreHorizontalIcon />
+                        </div>
 
-                          <p>Move to bin</p>
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </section>
+                        {/* postMore */}
+                        <div
+                          className=" absolute bg-background right-0  rounded-lg opacity-0 pointer-events-none text-nowrap p-2  font-normal w-[160px] flex flex-col gap-2 z-[8] transition-all duration-[0.3s]"
+                          id={post.$id}
+                        >
+                          <Button
+                            variant={"outline"}
+                            className="w-full flex gap-2 items-center cursor-pointer  hover:bg-accent hover:text-accent-foreground p-2 rounded-md border-none"
+                            onClick={() => handleReportPost(post)}
+                          >
+                            <MessageCircleQuestion className="text-[50px]" />
+                            <p>Report Post</p>
+                          </Button>
+                          {post.userId === userData?.userId ? (
+                            <Button
+                              variant={"outline"}
+                              className="w-full flex gap-2 items-center cursor-pointer border-none  hover:bg-accent hover:text-accent-foreground p-2 rounded-md"
+                              onClick={() =>
+                                handleDeletePost(post.$id, post.fileId)
+                              }
+                            >
+                              {deleting ? (
+                                <div className="w-5 h-5 border-2 border-secondary-foreground border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <Trash2 className="text-[50px]" />
+                              )}
 
-                <section className="px-4">
-                  <p className="text-[14px] font-[arial]">{post.caption}</p>
-                </section>
+                              <p>Move to bin</p>
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </section>
 
-                {post.fileUrl ? (
-                  <section className={`w-full bg-gray-400`}>
-                    {post.fileType === "video" ? (
-                      <video
-                        src={post.fileUrl}
-                        controls
-                        className="max-h-[450px] size-full"
-                      />
-                    ) : (
-                      <img
-                        loading="lazy"
-                        src={post.fileUrl}
-                        alt="posted image"
-                        className="max-h-[450px] size-full object-contain"
-                      />
-                    )}
-                  </section>
-                ) : null}
+                    <section className="px-4 text-foreground">
+                      <p className="text-[14px] font-[arial]">{post.caption}</p>
+                    </section>
 
-                <section className="flex flex-col gap-1 ">
-                  <div className="flex items-center justify-end gap-2 border-b py-2 ">
-                    <div className="flex items-center">
-                      <img
-                        src={thumbsUpIcon}
-                        alt="thumbsUp"
-                        width={20}
-                        height={20}
-                      />
-                      <p className="text-[12px] text-gray-400">
-                        {post.likes?.length}
-                      </p>
-                    </div>
-                    <div className="flex items-center px-4 ">
-                      <img
-                        src={commentIcon}
-                        alt="comment"
-                        width={20}
-                        height={20}
-                      />
-                      <p className="text-[12px] text-gray-400">
-                        {post.comments?.length}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between p-2">
-                    {post.likes?.length === 0 ? (
-                      <button
-                        className="cursor-pointer flex-1 text-[16px] text-gray-500 flex items-center justify-center hover:bg-gray-200 gap-1 rounded-md py-1 active:bg-gray-100"
-                        id={post.$id}
-                        onClick={() => handleLike(post.$id, userData)}
-                      >
-                        <ThumbsUp />
-                        Like
-                      </button>
-                    ) : userData && post.likes?.includes(userData.userId) ? (
-                      <button
-                        key={index}
-                        className="cursor-pointer flex-1 text-[16px]  flex items-center justify-center gap-1 rounded-md py-1 text-green-300 hover:bg-green-200 active:bg-green-100"
-                        onClick={() => handleUnLike(post.$id, userData)}
-                      >
-                        <ThumbsUp fill="#7bf1a8" />
-                        Like
-                      </button>
-                    ) : (
-                      <button
-                        key={index}
-                        className="cursor-pointer flex-1 text-[16px] text-gray-500 flex items-center justify-center hover:bg-gray-200 gap-1 rounded-md py-1 active:bg-gray-100"
-                        id={post.$id}
-                        onClick={() => handleLike(post.$id, userData)}
-                      >
-                        <ThumbsUp />
-                        Like
-                      </button>
-                    )}
+                    {post.fileUrl ? (
+                      <section className={`w-full bg-gray-500`}>
+                        {post.fileType === "video" ? (
+                          <video
+                            src={post.fileUrl}
+                            controls
+                            className="max-h-[450px] size-full"
+                          />
+                        ) : (
+                          <img
+                            loading="lazy"
+                            src={post.fileUrl}
+                            alt="posted image"
+                            className="max-h-[450px] size-full object-contain"
+                          />
+                        )}
+                      </section>
+                    ) : null}
 
-                    <button
-                      className="cursor-pointer flex-1 text-[16px] text-gray-500 flex gap-1 items-center justify-center hover:bg-gray-200 rounded-md py-1"
-                      onClick={() => handleCommentMode(post)}
-                    >
-                      <AiOutlineComment className="text-[23px]" />
-                      Comment
-                    </button>
-                  </div>
-                </section>
-              </li>
-            );
-          })}
-        </ul>
+                    <section className="flex flex-col gap-1 ">
+                      <div className="flex items-center justify-end gap-2 border-b py-2 ">
+                        <div className="flex items-center">
+                          <img
+                            src={thumbsUpIcon}
+                            alt="thumbsUp"
+                            width={20}
+                            height={20}
+                          />
+                          <p className="text-[12px] text-gray-400">
+                            {post.likes?.length}
+                          </p>
+                        </div>
+                        <div className="flex items-center px-4 ">
+                          <img
+                            src={commentIcon}
+                            alt="comment"
+                            width={20}
+                            height={20}
+                          />
+                          <p className="text-[12px] text-gray-400">
+                            {post.comments?.length}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between p-2 gap-2">
+                        {post.likes?.length === 0 ? (
+                          <Button
+                            variant={"outline"}
+                            className="cursor-pointer flex-1 text-[16px] text-muted-foreground flex items-center justify-center  gap-1 rounded-md py-1 border-none"
+                            id={post.$id}
+                            onClick={() => handleLike(post.$id, userData)}
+                          >
+                            <ThumbsUp />
+                            Like
+                          </Button>
+                        ) : userData &&
+                          post.likes?.includes(userData.userId) ? (
+                          <Button
+                            variant={"outline"}
+                            key={index}
+                            className="cursor-pointer flex-1 text-[16px]  flex items-center justify-center gap-1 rounded-md py-1 text-green-500 border-none hover:text-green-500"
+                            onClick={() => handleUnLike(post.$id, userData)}
+                          >
+                            <ThumbsUp fill="#05df72" />
+                            Like
+                          </Button>
+                        ) : (
+                          <Button
+                            variant={"outline"}
+                            key={index}
+                            className="cursor-pointer flex-1 text-[16px] text-muted-foreground flex items-center justify-center  gap-1 rounded-md py-1 border-none"
+                            id={post.$id}
+                            onClick={() => handleLike(post.$id, userData)}
+                          >
+                            <ThumbsUp />
+                            Like
+                          </Button>
+                        )}
+
+                        <Button
+                          variant={"outline"}
+                          className="cursor-pointer flex-1 text-[16px] text-muted-foreground flex gap-1 items-center justify-center  rounded-md py-1 border-none"
+                          onClick={() => handleCommentMode(post)}
+                        >
+                          <AiOutlineComment className="text-[23px]" />
+                          Comment
+                        </Button>
+                      </div>
+                    </section>
+                  </li>
+                );
+              })}
+            </ul>
+          </main>
+        )}
+
+        {/* outlet for post Block */}
+        <PostBlock
+          postMode={postMode}
+          setPostMode={setPostMode}
+          userData={userData}
+        />
+
+        {/* outlet for comment Block */}
+        <CommentMode
+          commentMode={commentMode}
+          setCommentMode={setCommentMode}
+          postToComment={postToComment}
+          userData={userData}
+        />
       </main>
-
-      {/* outlet for post Block */}
-      <PostBlock
-        postMode={postMode}
-        setPostMode={setPostMode}
-        userData={userData}
-      />
-
-      {/* outlet for comment Block */}
-      <CommentMode
-        commentMode={commentMode}
-        setCommentMode={setCommentMode}
-        postToComment={postToComment}
-        userData={userData}
-      />
-    </main>
-  );
+    );
+  }
 };
 
 export default Content;

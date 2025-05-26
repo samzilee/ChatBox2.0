@@ -1,12 +1,12 @@
 import { AiOutlineClose } from "react-icons/ai";
 import { useSidebar } from "@/components/ui/sidebar";
-import defaultProfile from "@/Assets/defaultProfile.png";
 import thumbsUpIcon from "@/Assets/thumbs-up-icon.png";
 import commentIcon from "@/Assets/comments-icons.png";
 import { SendHorizonalIcon, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateComments, deleteDocument } from "@/utils/db";
 import { client } from "@/utils/appWrite";
+import { Button } from "@/components/ui/button";
 
 const CommentMode = ({
   commentMode,
@@ -79,7 +79,7 @@ const CommentMode = ({
       setTrashComment("");
     } catch (error) {
       console.log(error);
-      setTrashComment(documentId);
+      setTrashComment("");
     }
   };
 
@@ -109,7 +109,7 @@ const CommentMode = ({
     >
       {/* BackGround  */}
       <div
-        className={`fixed border top-0 bottom-0 right-0 left-0 bg-gray-200/60 flex justify-center items-center`}
+        className={`fixed border top-0 bottom-0 right-0 left-0 bg-gray-500/60 flex justify-center items-center`}
         onClick={() => {
           setCommentMode(false);
           setOpen(true);
@@ -118,14 +118,15 @@ const CommentMode = ({
         }}
       ></div>
 
-      <div className="fixed bg-white w-[97%] h-[90%] md:w-[700px] md:h-[96%] rounded-lg flex flex-col">
+      <div className="fixed bg-card text-card-foreground w-[97%] h-[90%] md:w-[700px] md:h-[96%] rounded-lg flex flex-col">
         {/* Main Block Header */}
         <header className="flex items-center px-2 py-3 gap-2 border-b-[1.6px] border-t-gray-300 ">
           <p className="flex-1 text-center text-[20px]">
             {postToComment ? postToComment.user.name : ""}'s post
           </p>
-          <div
-            className=" font-extrabold  bg-gray-300 p-2 rounded-full hover:bg-gray-200 cursor-pointer"
+          <Button
+            variant={"destructive"}
+            className="font-extrabold p-2 rounded-full cursor-pointer h-[40px] w-[40px]"
             onClick={() => {
               setCommentMode(false);
               setOpen(true);
@@ -133,8 +134,8 @@ const CommentMode = ({
               body.style.overflow = "auto";
             }}
           >
-            <AiOutlineClose className="text-[25px] text-gray-500" />
-          </div>
+            <AiOutlineClose />
+          </Button>
         </header>
 
         <main className="gap-2 pb-5 flex-1 overflow-y-auto ">
@@ -143,11 +144,11 @@ const CommentMode = ({
               <div>
                 <img
                   loading="lazy"
-                  src={postToComment.user.picture || defaultProfile}
+                  src={postToComment.user.picture}
                   alt="avatar"
                   width={45}
                   height={45}
-                  className=" rounded-full"
+                  className=" rounded-full bg-background"
                 />
               </div>
               <div className="flex-1">
@@ -163,7 +164,7 @@ const CommentMode = ({
 
           <section className="flex flex-col gap-1 mb-4">
             {postToComment.fileUrl ? (
-              <div className="w-full md:object-fit flex justify-center md:bg-gray-300">
+              <div className="w-full md:object-fit flex justify-center md:bg-background">
                 {postToComment.fileType === "video" ? (
                   <video
                     src={postToComment.fileUrl}
@@ -181,7 +182,7 @@ const CommentMode = ({
               </div>
             ) : null}
 
-            <div className="border-b py-1 border-gray-200 flex  justify-end px-5 gap-3">
+            <div className="border-b py-1 border-border flex  justify-end px-5 gap-3">
               <div className="flex items-center">
                 <img src={thumbsUpIcon} alt="thumbsUp" width={20} height={20} />
                 <p className="text-[12px] text-gray-400">
@@ -197,43 +198,46 @@ const CommentMode = ({
 
           <section className="px-5">
             {comments.length === 0 ? (
-              <p className="text-gray-400 text-center">NO COMMENTS</p>
+              <p className="text-muted-foreground text-center">NO COMMENTS</p>
             ) : (
               <ul className="flex flex-col-reverse gap-4 pb-5">
                 {comments.map((comment: any, index: any) => {
                   return (
                     <li className="flex gap-2" key={index}>
                       <img
-                        src={comment.user.picture || defaultProfile}
+                        loading="lazy"
+                        src={comment.user.picture}
                         alt="avater"
                         className="w-[40px] h-[40px] rounded-full "
                       />
 
-                      <div className="bg-gray-300 px-3 pt-1 pb-2 rounded-lg">
+                      <div className="bg-background px-3 pt-1 pb-2 rounded-lg">
                         <p>
                           {comment.user.name}{" "}
-                          <span className="text-[12px] text-gray-500 font-semibold">
+                          <span className="text-[12px] text-muted-foreground font-semibold">
                             {formatDate(new Date(comment.$createdAt))}
                           </span>{" "}
                         </p>
-                        <p className="text-gray-600 text-[15px]">
-                          {comment.comment}
-                        </p>
+                        <p className="text-[15px]">{comment.comment}</p>
                       </div>
 
                       {userData.userId === comment.userId ? (
                         trashComment === comment.$id ? (
-                          <button className=" bg-gray-200 p-1 rounded-md h-fit pointer-events-none ">
-                            <div className="w-[23px] h-[23px] border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
-                          </button>
+                          <Button
+                            variant={"destructive"}
+                            className="p-1 rounded-md pointer-events-none  "
+                          >
+                            <div className="w-[23px] h-[23px] border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          </Button>
                         ) : (
-                          <button
-                            className="text-red-400 hover:text-red-500 hover:bg-gray-300 cursor-pointer bg-gray-200 p-1 rounded-md h-fit "
+                          <Button
+                            variant={"destructive"}
+                            className=" cursor-pointer p-1 rounded-md h-[35px] w-[35px] "
                             id={comment.$id}
                             onClick={() => handleDeleteComment(comment.$id)}
                           >
-                            <Trash2 className="w-[23px]" />
-                          </button>
+                            <Trash2 />
+                          </Button>
                         )
                       ) : null}
                     </li>
@@ -244,15 +248,15 @@ const CommentMode = ({
           </section>
         </main>
 
-        <footer className="border-t-[1.6px] border-t-gray-300 p-2 ">
-          <div className="bg-gray-200 p-2 rounded-lg flex gap-1">
+        <footer className="border-t-[1.6px] border-t-border p-2 ">
+          <div className="bg-input p-2 rounded-lg flex gap-1">
             <textarea
               ref={textareaRef}
               onInput={handleInput}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a comment..."
-              className="outline-none flex-1 border resize-none overflow-hidden"
+              className="outline-none flex-1 resize-none overflow-hidden"
             />
             <button
               className="size-fit cursor-pointer"
@@ -260,11 +264,11 @@ const CommentMode = ({
             >
               {sendingComment ? (
                 <div
-                  className="w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin
+                  className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
                 "
                 ></div>
               ) : (
-                <SendHorizonalIcon className="text-gray-600" />
+                <SendHorizonalIcon />
               )}
             </button>
           </div>

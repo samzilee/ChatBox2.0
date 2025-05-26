@@ -1,11 +1,11 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { AiOutlineClose } from "react-icons/ai";
-import defaultProfile from "../../../Assets/defaultProfile.png";
 import GalleryIcon from "../../../Assets/GalleryIcon.png";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { createDocument, createFile, getFile } from "@/utils/db";
+import Alert from "@/components/Alert";
 
 const PostBlock = ({ postMode, setPostMode, userData }: any) => {
   const { setOpen } = useSidebar();
@@ -23,6 +23,9 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
   useEffect(() => {
     if (postMode) {
       setOpen(false);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
     }
   }, [postMode]);
 
@@ -33,13 +36,6 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
     });
   }, [imageFile]);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setError(false);
-      clearTimeout(timeout);
-    }, 5000);
-  }, [error]);
-
   const handleInput = () => {
     const textarea = textareaRef.current;
     textarea.style.height = "auto"; // Reset height
@@ -48,7 +44,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
 
   const handlePost = async () => {
     setLoading(true);
-    if (imageFile && Image) {
+    if (imageFile && Image && fileType !== "") {
       handleCreateFile();
     } else {
       handleCreateDocument(undefined, undefined);
@@ -63,6 +59,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
       console.log(error);
       setErrorMessage("Error: couldn't get file");
       setError(true);
+      setLoading(false);
     }
   };
 
@@ -75,6 +72,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
       console.log(error);
       setErrorMessage("Error: couldn't create File");
       setError(true);
+      setLoading(false);
     }
   };
 
@@ -88,7 +86,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
         caption: postText,
         fileId: fileID,
         fileUrl: file,
-        fileType: fileType === "video" ? "video" : "picture",
+        fileType: fileType,
         comments: [],
         likes: [],
         user: {
@@ -124,7 +122,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
     >
       {/* BackGround  */}
       <div
-        className={`fixed border top-0 bottom-0 right-0 left-0 bg-gray-200/60 flex justify-center items-center`}
+        className={`fixed border top-0 bottom-0 right-0 left-0 bg-gray-500/60 flex justify-center items-center`}
         onClick={() => {
           setPostMode(false);
           setOpen(true);
@@ -133,22 +131,18 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
         }}
       ></div>
 
-      {/* Error Notification */}
-      <div
-        className={`absolute bottom-[15px] bg-red-500 text-gray-200 w-fit p-3  rounded-l-lg font-[arial] transition-all duration-[0.5s] text-[14px] ${
-          error ? "right-0" : "left-full"
-        }`}
-      >
-        <p>{errorMessage}</p>
-      </div>
+      {/* Alert */}
+
+      {error ? <Alert message={errorMessage} setActive={setError} /> : null}
 
       {/* Main Block */}
-      <div className="fixed bg-white w-[95%] h-[90%] md:w-[500px] md:h-[96%] rounded-lg flex flex-col ">
+      <div className="fixed bg-card text-card-foreground w-[95%] h-[90%] md:w-[500px] md:h-[96%] rounded-lg flex flex-col ">
         {/* Main Block Header */}
         <header className="flex items-center px-2 py-3 gap-2 border-b-[1.5px] ">
           <p className="flex-1 text-center text-[20px]">Create Post</p>
-          <div
-            className=" font-extrabold  bg-gray-300 p-2 rounded-full hover:bg-gray-200 cursor-pointer"
+          <Button
+            variant={"destructive"}
+            className=" font-extrabold w-[40px] h-[40px] p-2 rounded-full cursor-pointer"
             onClick={() => {
               setPostMode(false);
               setOpen(true);
@@ -156,23 +150,24 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
               body.style.overflow = "auto";
             }}
           >
-            <AiOutlineClose className="text-[25px] text-gray-500" />
-          </div>
+            <AiOutlineClose />
+          </Button>
         </header>
 
         {/* Main Block Content */}
         <main className="flex-1 p-4 overflow-y-auto flex flex-col gap-2">
-          <div className="flex flex-col gap-2 ">
+          <div className="flex flex-col gap-2 text">
             {/* text Area Block */}
             <div className="flex items-center gap-2">
               <img
-                src={userData ? userData.picture : defaultProfile}
+                loading="lazy"
+                src={userData?.picture}
                 alt="Avatar"
                 width={45}
                 height={45}
-                className="rounded-full"
+                className="rounded-full bg-background"
               />
-              <p>{userData ? userData.name : "null"}</p>
+              <p>{userData?.name || userData?.given_name}</p>
             </div>
 
             <textarea
@@ -209,7 +204,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
             }}
           />
           {localImage ? (
-            <div className="relative border-[2px] p-2 rounded-md bg-gray-200 overflow-auto">
+            <div className="relative border-[2px] p-2 rounded-md bg-background overflow-auto">
               <div>
                 {imageFile && imageFile.type.includes("video") ? (
                   <video
@@ -226,12 +221,14 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
                 )}
               </div>
 
-              <button
-                className="absolute top-[15px] right-[15px] bg-gray-200 rounded-full p-[2px] cursor-pointer"
+              <Button
+                variant={"destructive"}
+                className="absolute top-[15px] right-[15px] rounded-full p-[2px] cursor-pointer w-[30px] h-[30px]"
                 onClick={() => {
                   if (localImage) {
                     URL.revokeObjectURL(localImage);
                     setLocalImage("");
+                    setFileType("");
                   }
 
                   if (imageInputRef.current) {
@@ -239,13 +236,13 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
                   }
                 }}
               >
-                <AiOutlineClose className="text-[25px] text-gray-400" />
-              </button>
+                <AiOutlineClose />
+              </Button>
             </div>
           ) : (
             <label
               htmlFor="imageInput"
-              className="flex-1 rounded-lg bg-gray-200 cursor-pointer"
+              className="flex-1 rounded-lg bg-background cursor-pointer"
             >
               <div className="flex flex-col items-center justify-center h-full">
                 <img
@@ -261,13 +258,13 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
           {/* post Button */}
           {postText !== "" || localImage ? (
             <Button
-              className={`cursor-pointer font-bold text-[17px] opacity-[0.8] border-none ${
+              className={`cursor-pointer font-bold text-[17px] opacity-[0.8] border-none bg-primary ${
                 loading ? "pointer-events-none opacity-[0.6]" : ""
               }`}
               onClick={() => handlePost()}
             >
               <div
-                className={`w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin ${
+                className={`w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin ${
                   loading ? "block" : "hidden"
                 }`}
               ></div>
@@ -276,7 +273,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
           ) : (
             <Button
               variant="outline"
-              className={` pointer-events-none font-bold text-[17px] opacity-[0.6] border-none bg-gray-400`}
+              className={` pointer-events-none font-bold text-[17px] opacity-[0.6] border-none bg-muted text-muted-foreground`}
             >
               Post
             </Button>

@@ -1,64 +1,77 @@
 import * as React from "react";
-import { Minus, Plus } from "lucide-react";
-import webIcon from "../Assets/websiteIcon2.png";
+import webIcon from "@/Assets/websiteIcon2.png";
 
-import { SearchForm } from "@/components/search-form";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
-
-// This is sample data.
-const data = {
-  navMain: [
-    {
-      title: "Chats",
-      url: "/chats",
-      items: [
-        {
-          title: "Channels",
-          url: "/chats/channel",
-          isActive: false,
-        },
-      ],
-    },
-
-    {
-      title: "More",
-      url: "/more",
-      items: [
-        {
-          title: "Settings",
-          url: "/more/settings",
-          isActive: false,
-        },
-      ],
-    },
-  ],
-};
+import { NavLink, useLocation } from "react-router-dom";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const path = useLocation().pathname;
+
+  // This is sample data.
+  const data = {
+    navMain: [
+      {
+        title: "Channels",
+        url: "#",
+        items: [
+          {
+            title: "Status",
+            url: "/",
+            isActive: path === "/" ? true : false,
+          },
+          {
+            title: "Chat-Room",
+            url: "/channels/chatroom",
+            isActive: path === "/channels/chatroom" ? true : false,
+          },
+        ],
+      },
+      {
+        title: "Private Rooms",
+        url: "#",
+        items: [
+          {
+            title: "crazy shit room",
+            url: "#",
+            isActive: false,
+          },
+          {
+            title: "hitler convo",
+            url: "#",
+            isActive: false,
+          },
+        ],
+      },
+    ],
+  };
+
+  const handleMenuClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="./">
+              <a href="/">
                 <div className="w-full">
                   <img src={webIcon} alt="Website Icon" width={150} />
                 </div>
@@ -66,47 +79,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SearchForm />
       </SidebarHeader>
-
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu>
-            {data.navMain.map((item, index) => (
-              <Collapsible
-                key={item.title}
-                defaultOpen={index === 1}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
-                      {item.title}{" "}
-                      <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                      <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+        {/* We create a SidebarGroup for each parent. */}
+
+        {data.navMain.map((item) => (
+          <SidebarGroup key={item.title}>
+            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {item.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={item.isActive}
+                      onClick={() => handleMenuClick()}
+                      className="font-semibold"
+                    >
+                      <NavLink to={item.url}>{item.title}</NavLink>
                     </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  {item.items?.length ? (
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={item.isActive}
-                            >
-                              <a href={item.url}>{item.title}</a>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  ) : null}
-                </SidebarMenuItem>
-              </Collapsible>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

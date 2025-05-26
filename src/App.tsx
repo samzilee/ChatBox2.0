@@ -7,14 +7,13 @@ const App = () => {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <Main />,
-      children: [
-        {
-          path: "/chats/channel",
-          element: <div>Hi</div>,
-        },
-      ],
+      element: <Main path={"home"} />,
     },
+    {
+      path: "/channels/chatroom",
+      element: <Main path={"chatroom"} />,
+    },
+
     {
       path: "/logIn",
       element: <LoginPage />,

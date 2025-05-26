@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { googleLogin, getUserData } from "../utils/auth.utils.ts";
 import googleLogo from "../Assets/Logo-google-icon-PNG.png";
-import websiteLogo from "../Assets/websiteIcon2.png";
+import websiteLogo from "../Assets/websiteIcon3.png";
 import { useEffect, useState } from "react";
 
 export function LoginForm() {
@@ -30,7 +30,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col gap-6 rounded-lg overflow-hidden p-2 bg-[rgba(72,182,232,0.845)]">
+    <div className="flex flex-col gap-6 rounded-lg overflow-hidden p-2 bg-[rgba(72,182,232,0.845)] text-foreground">
       <header className=" mb-5 flex flex-col items-center">
         <img src={websiteLogo} alt="webLog" />
         <p className="font-bold text-[25px] ">Log in to your account</p>
@@ -38,7 +38,7 @@ export function LoginForm() {
           Welcome back! Sign in to pick up where you left off.
         </p>
       </header>
-      <main className="w-full bg-gray-200 p-2 rounded-lg">
+      <main className="w-full bg-secondary p-2 rounded-lg">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <Button
@@ -48,7 +48,7 @@ export function LoginForm() {
             >
               {loading ? (
                 <div
-                  className={`w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin`}
+                  className={`w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin`}
                 ></div>
               ) : (
                 <img
