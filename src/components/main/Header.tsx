@@ -9,15 +9,7 @@ import { signOut } from "../../utils/auth.utils.ts";
 import { Link } from "react-router-dom";
 
 const Header = ({ userData }: any) => {
-  const {
-    state,
-    open,
-    setOpen,
-    openMobile,
-    setOpenMobile,
-    isMobile,
-    toggleSidebar,
-  } = useSidebar();
+  const { open, setOpen, openMobile, setOpenMobile, isMobile } = useSidebar();
   const [accBlock, setAccBlock] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
   const accBlockRef = useRef(null);
