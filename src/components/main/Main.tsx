@@ -103,7 +103,7 @@ const Main = ({ path }: any) => {
   };
 
   return (
-    <div className="h-dvh">
+    <div>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>

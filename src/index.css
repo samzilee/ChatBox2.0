@@ -7,10 +7,8 @@
   scrollbar-width: thin;
 }
 
-html,
-body {
-  height: 100dvh;
-  overflow: hidden;
+:root {
+  --vh: 100vh;
 }
 
 :root {
