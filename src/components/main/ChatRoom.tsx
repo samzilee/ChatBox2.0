@@ -7,8 +7,10 @@ import Alert from "../Alert";
 import { MdCancel, MdReply } from "react-icons/md";
 import { Button } from "../ui/button";
 
-const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
+const ChatRoom = ({ userData }: any) => {
   const textareaRef = useRef(null);
+  const scrollElement = useRef<HTMLElement | null>(null);
+
   const [loadingChat, setLoadingChat] = useState<Boolean>(false);
   const [chats, setChats] = useState<any>([]);
   const [reply, setReply] = useState<any>(null);
@@ -16,6 +18,7 @@ const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
   const [sending, setSending] = useState<boolean>(false);
   const [sendAlert, setSendAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+  const [scrollDownButton, setScrollDownButton] = useState<boolean>(false);
 
   useEffect(() => {
     handleListChat();
@@ -126,11 +129,20 @@ const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
 
   const handleScrollDown = () => {
     const chatSroll = scrollElement.current;
-
     if (chatSroll) {
       chatSroll.scrollTo({
         top: chatSroll.scrollHeight,
       });
+    }
+  };
+
+  const handleCheckScroll = () => {
+    const chatScroll = scrollElement.current;
+    if (chatScroll) {
+      setScrollDownButton(
+        chatScroll.scrollTop + chatScroll.clientHeight <
+          chatScroll.scrollHeight - 100
+      );
     }
   };
 
@@ -149,13 +161,17 @@ const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
   }
 
   return (
-    <main className="flex-1 bg-background text-card-foreground flex flex-col">
+    <main className="h-full max-h-dvh bg-background text-card-foreground flex flex-col scroll-smooth overflow-y-auto ">
       {chats.length === 0 ? (
         <div className="flex-1 text-center text-foreground">
           <p>No Messages Yet.</p>
         </div>
       ) : (
-        <section className="flex-1 overflow-y-auto scroll-smooth">
+        <section
+          className="flex-1 overflow-y-auto scroll-smooth"
+          ref={scrollElement}
+          onScroll={() => handleCheckScroll()}
+        >
           <ul className="h-fit p-5 flex flex-col gap-5">
             {chats.map((chat: any) => {
               return chat.senderId === userData?.userId ? (
@@ -247,10 +263,10 @@ const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
         </section>
       )}
 
-      <section className="flex flex-col sticky bottom-0 items-center">
+      <section className="flex flex-col items-center relative">
         {/* scroll down button */}
         {scrollDownButton ? (
-          <div className=" flex pb-5 ">
+          <div className=" absolute top-[-48px] z-50 ">
             <button
               className="p-[6px] rounded-full cursor-pointer bg-primary "
               onClick={() => handleScrollDown()}
@@ -259,51 +275,50 @@ const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
             </button>
           </div>
         ) : null}
-        <div className="bg-background rounded-lg md:w-[80%] w-[95%] mb-5 border">
-          <div className="bg-input p-2 rounded-lg   flex flex-col gap-1  ">
-            {reply ? (
-              <div className="bg-card w-full flex flex-col px-2 py-1 rounded">
-                <header className="flex items-center justify-between">
-                  <p className="text-[15px]">{reply.name}</p>
-                  <button
-                    className="w-[20px] h-[20px] cursor-pointer"
-                    onClick={() => setReply(null)}
-                  >
-                    <MdCancel className="size-full" />
-                  </button>
-                </header>
 
-                <p className="text-[12px] text-muted-foreground">
-                  {reply.text.length > 200
-                    ? reply.text.slice(0, 200) + "..."
-                    : reply.text}
-                </p>
-              </div>
-            ) : null}
+        <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
+          {reply ? (
+            <div className="bg-card w-full flex flex-col px-2 py-1 rounded">
+              <header className="flex items-center justify-between">
+                <p className="text-[15px]">{reply.name}</p>
+                <button
+                  className="w-[20px] h-[20px] cursor-pointer"
+                  onClick={() => setReply(null)}
+                >
+                  <MdCancel className="size-full" />
+                </button>
+              </header>
 
-            <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
-              <textarea
-                ref={textareaRef}
-                onInput={handleInput}
-                placeholder="Write a comment..."
-                className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <button
-                className="size-fit cursor-pointer sticky top-0"
-                onClick={() => handleSendMessage()}
-              >
-                {sending ? (
-                  <div
-                    className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
-                "
-                  ></div>
-                ) : (
-                  <SendHorizonalIcon />
-                )}
-              </button>
+              <p className="text-[12px] text-muted-foreground">
+                {reply.text.length > 200
+                  ? reply.text.slice(0, 200) + "..."
+                  : reply.text}
+              </p>
             </div>
+          ) : null}
+
+          <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
+            <textarea
+              ref={textareaRef}
+              onInput={handleInput}
+              placeholder="Write a comment..."
+              className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            <button
+              className="size-fit cursor-pointer sticky top-0"
+              onClick={() => handleSendMessage()}
+            >
+              {sending ? (
+                <div
+                  className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
+                "
+                ></div>
+              ) : (
+                <SendHorizonalIcon />
+              )}
+            </button>
           </div>
         </div>
       </section>

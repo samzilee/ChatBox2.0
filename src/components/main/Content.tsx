@@ -214,7 +214,7 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
     );
   } else {
     return (
-      <main className="h-[100dvh] px-1 bg-background flex flex-col gap-5">
+      <main className="px-1 bg-background flex flex-col gap-5">
         <div className=" overflow-y-auto">
           {/* Alert */}
           {sendAlert ? (
