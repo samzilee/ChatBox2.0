@@ -278,7 +278,10 @@ const ChatRoom = ({ userData }: any) => {
 
         <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
           {reply ? (
-            <div className="bg-card w-full flex flex-col px-2 py-1 rounded">
+            <div
+              className="bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer"
+              onClick={() => handleScrollToView(reply.parentId)}
+            >
               <header className="flex items-center justify-between">
                 <p className="text-[15px]">{reply.name}</p>
                 <button
