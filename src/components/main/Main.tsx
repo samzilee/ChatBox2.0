@@ -8,14 +8,13 @@ import Content from "./Content";
 import Header from "./Header";
 import ChatRoom from "./ChatRoom.tsx";
 import Alert from "../Alert.tsx";
+import { createDocumentCustomID, updateUser } from "@/utils/db.ts";
 
 const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
     undefined
   );
-  const [userDataGoogle, setUserDataGoogle] = useState<object | undefined>(
-    undefined
-  );
+  const [userDataGoogle, setUserDataGoogle] = useState<any>(null);
   const [contentLoaded, setContentLoaded] = useState<boolean>(false);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -27,7 +26,6 @@ const Main = ({ path }: any) => {
   const handleUserData = async () => {
     try {
       const data = await getUserData();
-
       setUserInfo({
         userId: data.userId,
         accessToken: data.providerAccessToken,
@@ -72,35 +70,61 @@ const Main = ({ path }: any) => {
     }
   };
 
+  useEffect(() => {
+    if (userDataGoogle) {
+      handleSaveUser({
+        userId: userDataGoogle.userId,
+        email: userDataGoogle.email,
+        name: userDataGoogle.name,
+        picture: userDataGoogle.picture,
+        email_verified: userDataGoogle.email_verified,
+      });
+    }
+  }, [userDataGoogle]);
+
+  const handleSaveUser = async (userData: any) => {
+    try {
+      console.log("saving user in database...");
+      await createDocumentCustomID("Users", userData.userId, userData);
+    } catch (error) {
+      /*  console.clear(); */
+      console.log("user exist in database");
+      console.log("updating userData...");
+      handleUpdateUser(userData);
+    }
+  };
+
+  const handleUpdateUser = async (userData: any) => {
+    try {
+      await updateUser(userData.userId, userData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
-    <div>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Header userData={userDataGoogle} />
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Header userData={userDataGoogle} />
 
-          {path === "home" ? (
-            <div className="h-full ">
-              <Content
-                userData={userDataGoogle}
-                setContentLoaded={setContentLoaded}
-                contentLoaded={contentLoaded}
-              />
-            </div>
-          ) : null}
+        {path === "home" ? (
+          <div className="h-full ">
+            <Content
+              userData={userDataGoogle}
+              setContentLoaded={setContentLoaded}
+              contentLoaded={contentLoaded}
+            />
+          </div>
+        ) : null}
 
-          {path === "chatroom" ? (
-            <div className="h-full">
-              <ChatRoom />
-            </div>
-          ) : null}
+        {path === "chatroom" ? <ChatRoom userData={userDataGoogle} /> : null}
 
-          {sessionExpired ? (
-            <Alert message={alertMessage} setActive={setSessionExpired} />
-          ) : null}
-        </SidebarInset>
-      </SidebarProvider>
-    </div>
+        {sessionExpired ? (
+          <Alert message={alertMessage} setActive={setSessionExpired} />
+        ) : null}
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

@@ -3,9 +3,15 @@ import { databases, storage } from "./appWrite";
 import { ID, Query } from "appwrite";
 
 const createDocument = (collectionID:string,data:any) => {
-    const promise = databases.createDocument("chat_box", collectionID, ID.unique(), data)
-    return promise;
+    const result = databases.createDocument("chat_box", collectionID, ID.unique(), data)
+    return result;
 }
+
+const createDocumentCustomID = (collectionID:string, documentID:string, data:any) => {
+    const result = databases.createDocument("chat_box", collectionID, documentID, data)
+    return result;
+}
+
 
 
 const deleteDocument = ( collectionID:string ,documentID:string) => {
@@ -29,9 +35,16 @@ const deleteFile = (fileId:string) => {
     return result;
 }
 
- const listDocument = async() => {
-    const result = await databases.listDocuments("chat_box","posts", [Query.orderDesc("$createdAt")])
+ const listDocument = async(documentID:string, listOder:string) => {
+    const result = await databases.listDocuments("chat_box", documentID, [listOder === "new-to-old" ?  Query.orderDesc("$createdAt")  : Query.orderAsc("$createdAt")] )
     return result;
+}
+
+const checkForUser = async(userId:string) => {
+    const user = await databases.listDocuments("chat_box", "User", [Query.equal("userId", userId)] )
+
+   return user
+
 }
 
 const updateLikes = async(documentID:string, data:any) => {
@@ -48,7 +61,13 @@ const updateComments = async (documentID:string,data:any) => {
     return result;
 }
 
+const updateUser = async (documentID:string, data:any) => {
+    const result = await databases.updateDocument("chat_box","Users", documentID, data);
+    return result;
+}
 
 
-export {createDocument, createFile, getFile, deleteFile, listDocument, updateLikes, updateComments, deleteDocument}
+
+
+export {createDocument, createDocumentCustomID, checkForUser, createFile, getFile, deleteFile, listDocument, updateLikes, updateComments, updateUser, deleteDocument}
 

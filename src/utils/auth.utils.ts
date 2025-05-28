@@ -3,7 +3,8 @@ import { client } from "./appWrite";
 
 
 
-const account = new Account(client);
+ const account = new Account(client);
+
 function login(email:string, password:string) {
 return account.createEmailPasswordSession(email, password);
 

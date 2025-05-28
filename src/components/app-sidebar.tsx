@@ -34,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             isActive: path === "/" ? true : false,
           },
           {
-            title: "Chat-Room",
+            title: "Main-room",
             url: "/channels/chatroom",
             isActive: path === "/channels/chatroom" ? true : false,
           },

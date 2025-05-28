@@ -1,7 +1,13 @@
 import { AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 
-const Alert = ({ message, setActive }: any) => {
+const Alert = ({
+  message,
+  setActive,
+}: {
+  message: string;
+  setActive: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
   return (
     <main
       className={` fixed top-0 bottom-0 left-0 right-0 z-[10000] flex justify-center items-center `}

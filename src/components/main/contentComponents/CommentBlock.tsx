@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { updateComments, deleteDocument } from "@/utils/db";
 import { client } from "@/utils/appWrite";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/components/FormatDate";
 
 const CommentMode = ({
   commentMode,
@@ -83,16 +84,6 @@ const CommentMode = ({
     }
   };
 
-  function formatDate(date: any) {
-    const options = { day: "numeric", month: "long" };
-    const time = date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const dayMonth = date.toLocaleDateString(undefined, options);
-    return `${dayMonth} at ${time}`;
-  }
-
   const handleInput = () => {
     const textarea = textareaRef.current;
     textarea.style.height = "auto"; // Reset height
@@ -159,7 +150,7 @@ const CommentMode = ({
               </div>
             </div>
             {/* post caption */}
-            <p>{postToComment.caption}</p>
+            <p className=" whitespace-pre-wrap">{postToComment.caption}</p>
           </section>
 
           <section className="flex flex-col gap-1 mb-4">
@@ -218,7 +209,9 @@ const CommentMode = ({
                             {formatDate(new Date(comment.$createdAt))}
                           </span>{" "}
                         </p>
-                        <p className="text-[15px]">{comment.comment}</p>
+                        <p className="text-[15px] whitespace-pre-wrap">
+                          {comment.comment}
+                        </p>
                       </div>
 
                       {userData.userId === comment.userId ? (
