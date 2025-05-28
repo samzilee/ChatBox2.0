@@ -66,7 +66,8 @@ const Header = ({ userData }: any) => {
 
   return (
     <header
-      className="border-b border-border flex justify-between items-center p-2 px-3 h-[58px] absolute top-0 left-0 right-0 bg-background z-10
+      className="border-b border-border flex justify-between items-center p-2 px-3 h-[58px]  bg-background z-10
+      sticky top-0
     "
     >
       {/* Right Side of the header */}

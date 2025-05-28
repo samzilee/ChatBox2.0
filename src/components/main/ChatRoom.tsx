@@ -7,7 +7,7 @@ import Alert from "../Alert";
 import { MdCancel, MdReply } from "react-icons/md";
 import { Button } from "../ui/button";
 
-const ChatRoom = ({ userData }: any) => {
+const ChatRoom = ({ userData, scrollElement, scrollDownButton }: any) => {
   const textareaRef = useRef(null);
   const [loadingChat, setLoadingChat] = useState<Boolean>(false);
   const [chats, setChats] = useState<any>([]);
@@ -16,8 +16,6 @@ const ChatRoom = ({ userData }: any) => {
   const [sending, setSending] = useState<boolean>(false);
   const [sendAlert, setSendAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
-  const [scrollDownButton, setScrollDownButton] = useState<boolean>(false);
-  const scrollElement = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     handleListChat();
@@ -126,16 +124,6 @@ const ChatRoom = ({ userData }: any) => {
     }
   };
 
-  const handleCheckScroll = () => {
-    const chatScroll = scrollElement.current;
-    if (chatScroll) {
-      /* console.log(chatScroll.scrollTop, chatScroll.scrollHeight); */
-      setScrollDownButton(
-        chatScroll.scrollTop + chatScroll.clientHeight <
-          chatScroll.scrollHeight - 100
-      );
-    }
-  };
   const handleScrollDown = () => {
     const chatSroll = scrollElement.current;
 
@@ -161,20 +149,13 @@ const ChatRoom = ({ userData }: any) => {
   }
 
   return (
-    <main
-      className="bg-background text-card-foreground  flex flex-col "
-      style={{ height: "calc(var(--vh, 1vh) * 100)" }}
-    >
+    <main className="flex-1 bg-background text-card-foreground flex flex-col">
       {chats.length === 0 ? (
         <div className="flex-1 text-center text-foreground">
           <p>No Messages Yet.</p>
         </div>
       ) : (
-        <section
-          className="flex-1 overflow-y-auto scroll-smooth"
-          ref={scrollElement}
-          onScroll={() => handleCheckScroll()}
-        >
+        <section className="flex-1 overflow-y-auto scroll-smooth">
           <ul className="h-fit p-5 flex flex-col gap-5">
             {chats.map((chat: any) => {
               return chat.senderId === userData?.userId ? (
@@ -263,65 +244,66 @@ const ChatRoom = ({ userData }: any) => {
               );
             })}
           </ul>
-          {/* scroll down button */}
-          {scrollDownButton ? (
-            <div className=" sticky bottom-0 flex justify-end pr-[5%] pb-[5%]">
-              <button
-                className="p-[6px] rounded-full cursor-pointer bg-primary "
-                onClick={() => handleScrollDown()}
-              >
-                <ArrowDown className="text-[12px] font-bold text-primary-foreground" />
-              </button>
-            </div>
-          ) : (
-            ""
-          )}
         </section>
       )}
-      <section className="border-t-[1.6px] border-t-border p-2 pb-5 border flex justify-center">
-        <div className="bg-input p-2 rounded-lg  md:w-[80%] w-[95%] flex flex-col gap-1 ">
-          {reply ? (
-            <div className="bg-card w-full flex flex-col px-2 py-1 rounded">
-              <header className="flex items-center justify-between">
-                <p className="text-[15px]">{reply.name}</p>
-                <button
-                  className="w-[20px] h-[20px] cursor-pointer"
-                  onClick={() => setReply(null)}
-                >
-                  <MdCancel className="size-full" />
-                </button>
-              </header>
 
-              <p className="text-[12px] text-muted-foreground">
-                {reply.text.length > 200
-                  ? reply.text.slice(0, 200) + "..."
-                  : reply.text}
-              </p>
-            </div>
-          ) : null}
-
-          <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
-            <textarea
-              ref={textareaRef}
-              onInput={handleInput}
-              placeholder="Write a comment..."
-              className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
+      <section className="flex flex-col sticky bottom-0 items-center">
+        {/* scroll down button */}
+        {scrollDownButton ? (
+          <div className=" flex pb-5 ">
             <button
-              className="size-fit cursor-pointer sticky top-0"
-              onClick={() => handleSendMessage()}
+              className="p-[6px] rounded-full cursor-pointer bg-primary "
+              onClick={() => handleScrollDown()}
             >
-              {sending ? (
-                <div
-                  className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
-                "
-                ></div>
-              ) : (
-                <SendHorizonalIcon />
-              )}
+              <ArrowDown className="text-[12px] font-bold text-primary-foreground" />
             </button>
+          </div>
+        ) : null}
+        <div className="bg-background rounded-lg md:w-[80%] w-[95%] mb-5 border">
+          <div className="bg-input p-2 rounded-lg   flex flex-col gap-1  ">
+            {reply ? (
+              <div className="bg-card w-full flex flex-col px-2 py-1 rounded">
+                <header className="flex items-center justify-between">
+                  <p className="text-[15px]">{reply.name}</p>
+                  <button
+                    className="w-[20px] h-[20px] cursor-pointer"
+                    onClick={() => setReply(null)}
+                  >
+                    <MdCancel className="size-full" />
+                  </button>
+                </header>
+
+                <p className="text-[12px] text-muted-foreground">
+                  {reply.text.length > 200
+                    ? reply.text.slice(0, 200) + "..."
+                    : reply.text}
+                </p>
+              </div>
+            ) : null}
+
+            <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
+              <textarea
+                ref={textareaRef}
+                onInput={handleInput}
+                placeholder="Write a comment..."
+                className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+              <button
+                className="size-fit cursor-pointer sticky top-0"
+                onClick={() => handleSendMessage()}
+              >
+                {sending ? (
+                  <div
+                    className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
+                "
+                  ></div>
+                ) : (
+                  <SendHorizonalIcon />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </section>

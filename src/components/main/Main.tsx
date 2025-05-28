@@ -1,7 +1,7 @@
 import { AppSidebar } from "../app-sidebar";
 import { SidebarInset, SidebarProvider } from "../ui/sidebar";
 import { getUserData, signOut } from "../../utils/auth.utils.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { userAppWriteInfo } from "@/utils/utils.tsx";
 
 import Content from "./Content";
@@ -18,6 +18,9 @@ const Main = ({ path }: any) => {
   const [contentLoaded, setContentLoaded] = useState<boolean>(false);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+  const [scrollDownButton, setScrollDownButton] = useState<boolean>(false);
+
+  const scrollElement = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     handleUserData();
@@ -102,23 +105,46 @@ const Main = ({ path }: any) => {
     }
   };
 
+  const handleCheckScroll = () => {
+    const chatScroll = scrollElement.current;
+    if (chatScroll) {
+      setScrollDownButton(
+        chatScroll.scrollTop + chatScroll.clientHeight <
+          chatScroll.scrollHeight - 100
+      );
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <Header userData={userDataGoogle} />
+        <div
+          className="flex flex-col overflow-auto scroll-smooth "
+          style={{ height: "calc(var(--vh, 1vh) * 100)" }}
+          ref={scrollElement}
+          onScroll={() => handleCheckScroll()}
+        >
+          <Header userData={userDataGoogle} />
 
-        {path === "home" ? (
-          <div className="h-full ">
-            <Content
+          {path === "home" ? (
+            <div className="h-full ">
+              <Content
+                userData={userDataGoogle}
+                setContentLoaded={setContentLoaded}
+                contentLoaded={contentLoaded}
+              />
+            </div>
+          ) : null}
+
+          {path === "chatroom" ? (
+            <ChatRoom
               userData={userDataGoogle}
-              setContentLoaded={setContentLoaded}
-              contentLoaded={contentLoaded}
+              scrollElement={scrollElement}
+              scrollDownButton={scrollDownButton}
             />
-          </div>
-        ) : null}
-
-        {path === "chatroom" ? <ChatRoom userData={userDataGoogle} /> : null}
+          ) : null}
+        </div>
 
         {sessionExpired ? (
           <Alert message={alertMessage} setActive={setSessionExpired} />
