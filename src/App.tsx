@@ -1,10 +1,10 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import Main from "./components/main/Main";
 import LoginPage from "./components/Login/loginPage";
 import SigninPage from "./components/SignUp/signinPage";
 
 const App = () => {
-  const router = createBrowserRouter([
+  const router = createHashRouter([
     {
       path: "/",
       element: <Main path={"home"} />,
