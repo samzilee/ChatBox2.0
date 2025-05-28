@@ -103,28 +103,30 @@ const Main = ({ path }: any) => {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Header userData={userDataGoogle} />
+    <div className="h-dvh">
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Header userData={userDataGoogle} />
 
-        {path === "home" ? (
-          <div className="h-full ">
-            <Content
-              userData={userDataGoogle}
-              setContentLoaded={setContentLoaded}
-              contentLoaded={contentLoaded}
-            />
-          </div>
-        ) : null}
+          {path === "home" ? (
+            <div className="h-full ">
+              <Content
+                userData={userDataGoogle}
+                setContentLoaded={setContentLoaded}
+                contentLoaded={contentLoaded}
+              />
+            </div>
+          ) : null}
 
-        {path === "chatroom" ? <ChatRoom userData={userDataGoogle} /> : null}
+          {path === "chatroom" ? <ChatRoom userData={userDataGoogle} /> : null}
 
-        {sessionExpired ? (
-          <Alert message={alertMessage} setActive={setSessionExpired} />
-        ) : null}
-      </SidebarInset>
-    </SidebarProvider>
+          {sessionExpired ? (
+            <Alert message={alertMessage} setActive={setSessionExpired} />
+          ) : null}
+        </SidebarInset>
+      </SidebarProvider>
+    </div>
   );
 };
 

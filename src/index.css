@@ -7,6 +7,12 @@
   scrollbar-width: thin;
 }
 
+html,
+body {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 :root {
   --radius: 0.5rem;
   --background: oklch(0.93 0.01 265);
