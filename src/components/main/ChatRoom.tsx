@@ -161,10 +161,7 @@ const ChatRoom = ({ userData }: any) => {
   }
 
   return (
-    <main
-      className="bg-background text-card-foreground  flex flex-col pt-[58px] h-full"
-      style={{ height: "calc(var(--vh, 1vh) * 100)" }}
-    >
+    <main className="bg-background text-card-foreground  flex flex-col pt-[58px] h-full">
       {chats.length === 0 ? (
         <div className="flex-1 text-center text-foreground">
           <p>No Messages Yet.</p>
