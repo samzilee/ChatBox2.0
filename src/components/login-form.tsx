@@ -3,6 +3,7 @@ import { googleLogin, getUserData } from "../utils/auth.utils.ts";
 import googleLogo from "../Assets/Logo-google-icon-PNG.png";
 import websiteLogo from "../Assets/websiteIcon3.png";
 import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
 
 export function LoginForm() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -32,7 +33,7 @@ export function LoginForm() {
   return (
     <div className="flex flex-col gap-6 rounded-lg overflow-hidden p-2 bg-[rgba(72,182,232,0.845)] text-foreground">
       <header className=" mb-5 flex flex-col items-center">
-        <img src={websiteLogo} alt="webLog" />
+        <img src={websiteLogo} alt="logo" />
         <p className="font-bold text-[25px] ">Log in to your account</p>
         <p className=" text-[13px]">
           Welcome back! Sign in to pick up where you left off.
@@ -65,9 +66,9 @@ export function LoginForm() {
         </div>
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
-          <a href="/signUp" className="underline underline-offset-4">
+          <NavLink to="/signUp" className="underline underline-offset-4">
             Sign up
-          </a>
+          </NavLink>
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import GalleryIcon from "../../Assets/GalleryIcon.png";
 import PostBlock from "./contentComponents/PostBlock";
@@ -8,13 +8,8 @@ import commentIcon from "../../Assets/comments-icons.png";
 import { useSidebar } from "../ui/sidebar";
 import { AiOutlineComment } from "react-icons/ai";
 import { MdAccountCircle } from "react-icons/md";
-import {
-  listDocument,
-  updateLikes,
-  deleteDocument,
-  deleteFile,
-} from "@/utils/db";
-import { client } from "@/utils/appWrite";
+import { updateDocument, deleteDocument, deleteFile } from "@/utils/db";
+
 import { formatDate } from "../FormatDate";
 import {
   MessageCircleQuestion,
@@ -26,71 +21,21 @@ import CommentMode from "./contentComponents/CommentBlock";
 import { Button } from "../ui/button";
 import Alert from "../Alert";
 
-const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
+const Content = ({
+  userData,
+  contentLoaded,
+  setSendAlert,
+  setAlertMessage,
+  sendAlert,
+  alertMessage,
+  posts,
+}: any) => {
   const [postMode, setPostMode] = useState<boolean>(false);
   const [commentMode, setCommentMode] = useState<boolean>(false);
   const [postToComment, setPostToComment] = useState<any>(null);
   const { isMobile, setOpen } = useSidebar();
-  const [posts, setPosts] = useState<any>([]);
   const [activeMore, setActiveMore] = useState<string>("");
   const [deleting, setDeleting] = useState<boolean>(false);
-  const [sendAlert, setSendAlert] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
-
-  useEffect(() => {
-    setContentLoaded(false);
-    handleListPosts();
-
-    const unsubscribe = client.subscribe(
-      `databases.chat_box.collections.posts.documents`,
-      (response: any) => {
-        if (
-          response.events.includes(
-            "databases.*.collections.*.documents.*.delete"
-          )
-        ) {
-          setPosts((prev: any) =>
-            prev.filter((post: any) => post.$id !== response.payload.$id)
-          );
-        } else if (
-          response.events.some(
-            (e: string) => e.includes("create") || e.includes("update")
-          )
-        ) {
-          setPosts((prev: any) => {
-            const exists = prev.find(
-              (post: any) => post.$id === response.payload.$id
-            );
-            if (exists) {
-              return prev.map((post: any) =>
-                post.$id === response.payload.$id ? response.payload : post
-              );
-            } else {
-              return [response.payload, ...prev];
-            }
-          });
-        }
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleListPosts = async () => {
-    try {
-      const result = await listDocument("posts", "new-to-old");
-
-      setPosts(result.documents);
-      setContentLoaded(true);
-    } catch (error) {
-      console.log(error);
-      setContentLoaded(true);
-      setSendAlert(true);
-      setAlertMessage(
-        "Error Loading Posts, Check your internet connection and try again"
-      );
-    }
-  };
 
   const handlePostMode = () => {
     if (!userData)
@@ -185,7 +130,9 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
       const filterPost = await posts.filter((post: any) => post.$id === postId);
 
       const preveLikes = filterPost[0].likes;
-      updateLikes(postId, [...preveLikes, userId.userId]);
+      updateDocument("posts", postId, {
+        likes: [...preveLikes, userId.userId],
+      });
     } catch (error) {
       console.log(error);
     }
@@ -199,7 +146,7 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
         (like: any) => like !== userId.userId
       );
 
-      updateLikes(postId, [...preveLikes]);
+      updateDocument("posts", postId, { likes: [...preveLikes] });
     } catch (error) {
       console.log(error);
     }
@@ -214,8 +161,8 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
     );
   } else {
     return (
-      <main className="px-1 bg-background flex flex-col gap-5">
-        <div className=" overflow-y-auto">
+      <main className="h-dvh bg-background text-card-foreground flex flex-col scroll-smooth overflow-y-auto  pt-[58px]">
+        <div className="overflow-y-auto">
           {/* Alert */}
           {sendAlert ? (
             <Alert message={alertMessage} setActive={setSendAlert} />
@@ -265,8 +212,8 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
           </div>
 
           {posts.length === 0 ? (
-            <div className="bg-background text-foreground flex justify-center font-bold">
-              <p>Nothing To See Here...</p>
+            <div className="flex-1 bg-background text-foreground flex justify-center font-bold">
+              <p className="py-5">Nothing To See Here...</p>
             </div>
           ) : (
             <main className=" flex-1 flex justify-center py-5 px-1">
@@ -356,7 +303,9 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
                       </section>
 
                       {post.fileUrl ? (
-                        <section className={`w-full bg-gray-500`}>
+                        <section
+                          className={`w-full bg-[rgba(170,170,170,0.241)]`}
+                        >
                           {post.fileType === "video" ? (
                             <video
                               src={post.fileUrl}
@@ -457,6 +406,7 @@ const Content = ({ userData, setContentLoaded, contentLoaded }: any) => {
           postMode={postMode}
           setPostMode={setPostMode}
           userData={userData}
+          posts={posts}
         />
 
         {/* outlet for comment Block */}

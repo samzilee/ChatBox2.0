@@ -4,7 +4,7 @@ import thumbsUpIcon from "@/Assets/thumbs-up-icon.png";
 import commentIcon from "@/Assets/comments-icons.png";
 import { SendHorizonalIcon, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { updateComments, deleteDocument } from "@/utils/db";
+import { updateDocument, deleteDocument } from "@/utils/db";
 import { client } from "@/utils/appWrite";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/components/FormatDate";
@@ -59,7 +59,9 @@ const CommentMode = ({
         ...comments,
       ];
 
-      await updateComments(postToComment.$id, newComments);
+      await updateDocument("posts", postToComment.$id, {
+        comments: newComments,
+      });
 
       setCommentText("");
       setSendingComment(false);
@@ -73,10 +75,9 @@ const CommentMode = ({
     try {
       setTrashComment(documentId);
       await deleteDocument("comments", documentId);
-      await updateComments(
-        postToComment.$id,
-        comments.filter((comment: any) => comment.$id !== documentId)
-      );
+      await updateDocument("posts", postToComment.$id, {
+        comments: comments.filter((comment: any) => comment.$id !== documentId),
+      });
       setTrashComment("");
     } catch (error) {
       console.log(error);

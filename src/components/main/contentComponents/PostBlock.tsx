@@ -4,10 +4,16 @@ import { AiOutlineClose } from "react-icons/ai";
 import GalleryIcon from "../../../Assets/GalleryIcon.png";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { createDocument, createFile, getFile } from "@/utils/db";
+import {
+  createDocument,
+  createFile,
+  deleteDocument,
+  deleteFile,
+  getFile,
+} from "@/utils/db";
 import Alert from "@/components/Alert";
 
-const PostBlock = ({ postMode, setPostMode, userData }: any) => {
+const PostBlock = ({ postMode, setPostMode, userData, posts }: any) => {
   const { setOpen } = useSidebar();
   const [postText, setPostText] = useState<string>("");
   const [localImage, setLocalImage] = useState<any>(null);
@@ -44,10 +50,25 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
 
   const handlePost = async () => {
     setLoading(true);
-    if (imageFile && Image && fileType !== "") {
-      handleCreateFile();
-    } else {
-      handleCreateDocument(undefined, undefined);
+    try {
+      if (posts.length === 100) {
+        const oldestPost: any = posts[posts.length - 1];
+        await deleteDocument("posts", oldestPost.$id);
+        if (oldestPost.fileId) {
+          await deleteFile(oldestPost.fileId);
+        }
+      }
+
+      if (imageFile && Image && fileType !== "") {
+        handleCreateFile();
+      } else {
+        handleCreateDocument(undefined, undefined);
+      }
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Error uploading document");
+      setError(true);
+      setLoading(false);
     }
   };
 
@@ -70,7 +91,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
       handleCreateDocument(result.href, response.$id);
     } catch (error) {
       console.log(error);
-      setErrorMessage("Error: couldn't create File");
+      setErrorMessage("Error: couldn't upload file");
       setError(true);
       setLoading(false);
     }
@@ -107,7 +128,7 @@ const PostBlock = ({ postMode, setPostMode, userData }: any) => {
       body.style.overflow = "auto";
     } catch (error) {
       console.log(error);
-      setErrorMessage("Error: couldn't create ducument");
+      setErrorMessage("Error: couldn't upload ducument");
       setError(true);
       setLoading(false);
       setImageFile(null);

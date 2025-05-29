@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import settingsIcon from "../../Assets/settings-icon.png";
 import signOutIcon from "../../Assets/sign-out-icon.png";
 import { signOut } from "../../utils/auth.utils.ts";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const Header = ({ userData }: any) => {
   const { open, setOpen, openMobile, setOpenMobile, isMobile } = useSidebar();
@@ -67,7 +67,7 @@ const Header = ({ userData }: any) => {
   return (
     <header
       className="border-b border-border flex justify-between items-center p-2 px-3 h-[58px]  bg-background z-10
-      sticky top-0
+       absolute right-0 left-0 top-0
     "
     >
       {/* Right Side of the header */}
@@ -102,23 +102,23 @@ const Header = ({ userData }: any) => {
           />
         ) : (
           <div className="flex gap-3">
-            <Link to="/signUp">
+            <NavLink to="/signUp">
               <Button
                 size="sm"
                 className="bg-[rgba(64,188,145,0.845)] hover:bg-[rgba(64,188,145,0.6)] cursor-pointer"
               >
                 SignUp
               </Button>
-            </Link>
+            </NavLink>
 
-            <Link to="/logIn">
+            <NavLink to="/logIn">
               <Button
                 size="sm"
                 className="cursor-pointer bg-[rgba(72,182,232,0.845)] hover:bg-[rgba(72,182,232,0.6)]"
               >
                 LogIn
               </Button>
-            </Link>
+            </NavLink>
           </div>
         )}
 

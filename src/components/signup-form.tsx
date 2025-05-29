@@ -3,6 +3,7 @@ import { googleLogin, getUserData } from "../utils/auth.utils.ts";
 import googleLogo from "../Assets/Logo-google-icon-PNG.png";
 import websiteLogo from "../Assets/websiteIcon3.png";
 import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
 
 export function SignUpForm() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -64,9 +65,9 @@ export function SignUpForm() {
         </div>
         <div className="mt-4 text-center text-sm">
           Already have an account?{" "}
-          <a href="/login" className="underline underline-offset-4">
+          <NavLink to="/login" className="underline underline-offset-4">
             LogIn
-          </a>
+          </NavLink>
         </div>
       </main>
     </div>

@@ -1,14 +1,19 @@
-import { ArrowDown, SendHorizonalIcon } from "lucide-react";
+import { ArrowDown, Pen, SendHorizonalIcon, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { formatDate } from "../FormatDate";
-import { createDocument, listDocument } from "@/utils/db";
+import {
+  createDocument,
+  listDocument,
+  deleteDocument,
+  updateDocument,
+} from "@/utils/db";
 import { client } from "@/utils/appWrite";
 import Alert from "../Alert";
 import { MdCancel, MdReply } from "react-icons/md";
 import { Button } from "../ui/button";
 
 const ChatRoom = ({ userData }: any) => {
-  const textareaRef = useRef(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollElement = useRef<HTMLElement | null>(null);
 
   const [loadingChat, setLoadingChat] = useState<Boolean>(false);
@@ -16,9 +21,11 @@ const ChatRoom = ({ userData }: any) => {
   const [reply, setReply] = useState<any>(null);
   const [message, setMessage] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
+  const [deletingMessage, setDeletingMessage] = useState<boolean>(false);
   const [sendAlert, setSendAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [scrollDownButton, setScrollDownButton] = useState<boolean>(false);
+  const [editMessageMode, setEditMessageMobe] = useState<boolean>(false);
 
   useEffect(() => {
     handleListChat();
@@ -33,6 +40,19 @@ const ChatRoom = ({ userData }: any) => {
           setChats((prev: any) =>
             prev.filter((chat: any) => chat.$id !== response.payload.$id)
           );
+        } else if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.update"
+          )
+        ) {
+          setChats((prev: any) => {
+            return prev.map((chat: any) => {
+              if (chat.$id === response.payload.$id) {
+                return response.payload;
+              }
+              return chat;
+            });
+          });
         } else {
           setChats((prev: any) => {
             return [...prev, response.payload];
@@ -76,10 +96,19 @@ const ChatRoom = ({ userData }: any) => {
 
   const handleSendMessage = async () => {
     if (message === "") return;
+    setSending(true);
     try {
+      if (chats.length === 100 && !reply?.oldTextToUpDate) {
+        await deleteDocument("mainroom", chats[0].$id);
+      }
       if (userData) {
-        setSending(true);
-        if (reply) {
+        if (editMessageMode) {
+          await updateDocument("mainroom", reply.documentId, {
+            text: message,
+            edited: true,
+          });
+          setEditMessageMobe(false);
+        } else if (reply) {
           await createDocument("mainroom", {
             text: message,
             senderId: userData.userId,
@@ -108,6 +137,26 @@ const ChatRoom = ({ userData }: any) => {
     } catch (error) {
       console.log(error);
       setSending(false);
+      /* setSendAlert(true);
+      setAlertMessage(
+        "Hmm... couldn't send that message. Want to give it another try?"
+      ); */
+    }
+  };
+
+  const handleDeleteMessage = async (documentID: string) => {
+    try {
+      setDeletingMessage(true);
+      const result = await deleteDocument("mainroom", documentID);
+      setDeletingMessage(false);
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+      setDeletingMessage(false);
+      setSendAlert(true);
+      setAlertMessage(
+        "Hmm... couldn't delete that message. Want to give it another try?"
+      );
     }
   };
 
@@ -119,11 +168,30 @@ const ChatRoom = ({ userData }: any) => {
       userId: chat.senderId,
     });
   };
+  const handleUpdateMessage = (documentID: string, textToUpdate: string) => {
+    setReply({
+      oldTextToUpDate: textToUpdate,
+      documentId: documentID,
+    });
+    setEditMessageMobe(true);
+    const textarea: HTMLTextAreaElement | null = textareaRef.current;
+    if (textarea) {
+      setMessage(textToUpdate);
+      textarea.value = textToUpdate;
+      textarea.focus();
+      handleInput();
+    }
+  };
 
   const handleScrollToView = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView();
+      element.style.backgroundColor = "rgba(170,170,170,0.241)";
+      const clearStyle = setTimeout(() => {
+        element.style.backgroundColor = "transparent";
+        clearTimeout(clearStyle);
+      }, 5000);
     }
   };
 
@@ -161,22 +229,65 @@ const ChatRoom = ({ userData }: any) => {
   }
 
   return (
-    <main className="h-full max-h-dvh bg-background text-card-foreground flex flex-col scroll-smooth overflow-y-auto ">
+    <main className=" max-h-dvh bg-background text-card-foreground flex flex-col scroll-smooth overflow-y-auto pt-[58px]">
       {chats.length === 0 ? (
         <div className="flex-1 text-center text-foreground">
-          <p>No Messages Yet.</p>
+          <p className="py-5">No Messages Yet.</p>
         </div>
       ) : (
         <section
-          className="flex-1 overflow-y-auto scroll-smooth"
+          className="flex-1 overflow-y-auto scroll-smooth "
           ref={scrollElement}
           onScroll={() => handleCheckScroll()}
         >
-          <ul className="h-fit p-5 flex flex-col gap-5">
+          <ul className="h-fit p-5 py-10 flex flex-col gap-2">
             {chats.map((chat: any) => {
               return chat.senderId === userData?.userId ? (
-                <li className="flex justify-end " key={chat.$id} id={chat.$id}>
-                  <div className=" bg-green-800 text-white w-fit rounded-md max-w-[80%] md:max-w-[500px] px-2 py-1 flex flex-col ">
+                /* Sender Block */
+                <li
+                  className="flex justify-end rounded-md"
+                  key={chat.$id}
+                  id={chat.$id}
+                >
+                  <div className="bg-green-800 text-white w-fit rounded-md max-w-[80%] md:max-w-[500px] px-2 py-1 flex flex-col group">
+                    <div className="h-0 opacity-0 group-hover:h-10 group-hover:opacity-[1] transition-all duration-[0.5s] flex items-center justify-between gap-5 overflow-x-auto overflow-y-hidden px-2 mb-2">
+                      <div className="flex gap-2 text-foreground">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="cursor-pointer"
+                          onClick={() =>
+                            handleUpdateMessage(chat.$id, chat.text)
+                          }
+                        >
+                          <Pen fill="white" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="cursor-pointer"
+                          onClick={() => handleReply(chat)}
+                        >
+                          <MdReply />
+                        </Button>
+                      </div>
+                      {deletingMessage ? (
+                        <Button variant="destructive" size="icon">
+                          <div className="w-5 h-5 border-3 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="cursor-pointer"
+                          onClick={() => handleDeleteMessage(chat.$id)}
+                        >
+                          <Trash fill="white" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* replies if any */}
                     {chat.replies ? (
                       <div
                         className="bg-green-900 rounded px-2 py-1 cursor-pointer flex flex-col"
@@ -198,15 +309,29 @@ const ChatRoom = ({ userData }: any) => {
                       <p className="text-[14px] whitespace-pre-wrap">
                         {chat.text}
                       </p>
-                      {/* date */}
-                      <p className="text-[12px] text-gray-200/65 font-semibold text-end ">
-                        {formatDate(new Date(chat.$createdAt))}
-                      </p>
+                      <div className="flex gap-3 justify-between">
+                        {/* date */}
+                        <p className="text-[12px] text-gray-200/65 font-semibold text-end ">
+                          {formatDate(new Date(chat.$createdAt))}
+                        </p>
+                        <p
+                          className={`text-[12px] text-gray-200/65 font-semibold text-end ${
+                            chat.edited ? "block" : "hidden"
+                          }`}
+                        >
+                          Edited
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </li>
               ) : (
-                <li className="flex justify-start" key={chat.$id} id={chat.$id}>
+                /* Other Block */
+                <li
+                  className="flex justify-start rounded-md"
+                  key={chat.$id}
+                  id={chat.$id}
+                >
                   <div className="flex flex-col gap-1 bg-card w-fit p-2 rounded-md max-w-[80%] md:max-w-[500px]">
                     <div className="flex gap-2">
                       {/* profile */}
@@ -226,6 +351,7 @@ const ChatRoom = ({ userData }: any) => {
                       </div>
                     </div>
 
+                    {/* replies if any */}
                     {chat.replies ? (
                       <div
                         className="bg-background rounded px-2 py-1 cursor-pointer flex flex-col"
@@ -242,11 +368,18 @@ const ChatRoom = ({ userData }: any) => {
                       </div>
                     ) : null}
 
-                    <div className="rounded-lg flex-1">
+                    <div className="flex-1">
                       <p className="text-[14px] whitespace-pre-wrap">
                         {chat.text}
                       </p>
                     </div>
+                    <p
+                      className={`text-[12px] text-muted-foreground font-semibold ${
+                        chat.edited ? "block" : "hidden"
+                      }`}
+                    >
+                      Edited
+                    </p>
                   </div>
                   <Button
                     variant="ghost"
@@ -277,16 +410,21 @@ const ChatRoom = ({ userData }: any) => {
         ) : null}
 
         <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
-          {reply ? (
+          {reply && !reply.oldTextToUpDate ? (
             <div
               className="bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer"
               onClick={() => handleScrollToView(reply.parentId)}
             >
               <header className="flex items-center justify-between">
-                <p className="text-[15px]">{reply.name}</p>
+                <p className="text-[15px]">
+                  {reply.userId === userData.userId ? "You" : reply.name}
+                </p>
                 <button
                   className="w-[20px] h-[20px] cursor-pointer"
-                  onClick={() => setReply(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReply(null);
+                  }}
                 >
                   <MdCancel className="size-full" />
                 </button>
@@ -298,7 +436,34 @@ const ChatRoom = ({ userData }: any) => {
                   : reply.text}
               </p>
             </div>
-          ) : null}
+          ) : (
+            /* updating Message */
+            <div
+              className={`bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer ${
+                reply ? "block" : "hidden"
+              }`}
+              onClick={() => handleScrollToView(reply?.documentId)}
+            >
+              <header className="flex items-center justify-between">
+                <p className="text-[15px]">Edit Message...</p>
+                <button
+                  className="w-[20px] h-[20px] cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReply(null);
+                  }}
+                >
+                  <MdCancel className="size-full" />
+                </button>
+              </header>
+
+              <p className="text-[12px] text-muted-foreground">
+                {reply?.oldTextToUpDate > 200
+                  ? reply?.oldTextToUpDate.slice(0, 200) + "..."
+                  : reply?.oldTextToUpDate}
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
             <textarea

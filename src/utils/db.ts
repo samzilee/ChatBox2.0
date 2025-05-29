@@ -36,7 +36,7 @@ const deleteFile = (fileId:string) => {
 }
 
  const listDocument = async(documentID:string, listOder:string) => {
-    const result = await databases.listDocuments("chat_box", documentID, [listOder === "new-to-old" ?  Query.orderDesc("$createdAt")  : Query.orderAsc("$createdAt")] )
+    const result = await databases.listDocuments("chat_box", documentID, [listOder === "new-to-old" ?  Query.orderDesc("$createdAt")  : Query.orderAsc("$createdAt"), Query.limit(100)])
     return result;
 }
 
@@ -47,27 +47,16 @@ const checkForUser = async(userId:string) => {
 
 }
 
-const updateLikes = async(documentID:string, data:any) => {
-    const result = await databases.updateDocument("chat_box","posts",documentID, {
-        likes:data
-    })
-    return result;
-}
 
-const updateComments = async (documentID:string,data:any) => {
-    const result = await databases.updateDocument("chat_box", "posts", documentID, {
-        comments: data
-    })
-    return result;
-}
-
-const updateUser = async (documentID:string, data:any) => {
-    const result = await databases.updateDocument("chat_box","Users", documentID, data);
+const updateDocument = async (collectionID:string,documentID:string, data:any) => {
+    const result = await databases.updateDocument("chat_box",collectionID, documentID, data);
     return result;
 }
 
 
 
 
-export {createDocument, createDocumentCustomID, checkForUser, createFile, getFile, deleteFile, listDocument, updateLikes, updateComments, updateUser, deleteDocument}
+
+
+export {createDocument, createDocumentCustomID, checkForUser, createFile, getFile, deleteFile, listDocument, updateDocument, deleteDocument}
 

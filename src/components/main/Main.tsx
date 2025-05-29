@@ -8,8 +8,12 @@ import Content from "./Content";
 import Header from "./Header";
 import ChatRoom from "./ChatRoom.tsx";
 import Alert from "../Alert.tsx";
-import { createDocumentCustomID, updateUser } from "@/utils/db.ts";
-
+import {
+  createDocumentCustomID,
+  updateDocument,
+  listDocument,
+} from "@/utils/db";
+import { client } from "@/utils/appWrite";
 const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
     undefined
@@ -18,10 +22,70 @@ const Main = ({ path }: any) => {
   const [contentLoaded, setContentLoaded] = useState<boolean>(false);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+  const [sendAlert, setSendAlert] = useState<boolean>(false);
+  const [posts, setPosts] = useState<any>([]);
 
   useEffect(() => {
     handleUserData();
   }, []);
+
+  {
+    /* posts realTime upDate */
+  }
+  useEffect(() => {
+    setContentLoaded(false);
+    handleListPosts();
+    const unsubscribe = client.subscribe(
+      `databases.chat_box.collections.posts.documents`,
+      (response: any) => {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.delete"
+          )
+        ) {
+          setPosts((prev: any) =>
+            prev.filter((post: any) => post.$id !== response.payload.$id)
+          );
+        } else if (
+          response.events.some(
+            (e: string) => e.includes("create") || e.includes("update")
+          )
+        ) {
+          setPosts((prev: any) => {
+            const exists = prev.find(
+              (post: any) => post.$id === response.payload.$id
+            );
+            if (exists) {
+              return prev.map((post: any) =>
+                post.$id === response.payload.$id ? response.payload : post
+              );
+            } else {
+              return [response.payload, ...prev];
+            }
+          });
+        }
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  {
+    /* listPosts */
+  }
+  const handleListPosts = async () => {
+    try {
+      const result = await listDocument("posts", "new-to-old");
+      setPosts(result.documents);
+      setContentLoaded(true);
+    } catch (error) {
+      console.log(error);
+      setContentLoaded(true);
+      setSendAlert(true);
+      setAlertMessage(
+        "Error Loading Posts, Check your internet connection and try again"
+      );
+    }
+  };
 
   const handleUserData = async () => {
     try {
@@ -96,7 +160,7 @@ const Main = ({ path }: any) => {
 
   const handleUpdateUser = async (userData: any) => {
     try {
-      await updateUser(userData.userId, userData);
+      await updateDocument("Users", userData.userId, userData);
     } catch (error) {
       console.log(error);
     }
@@ -112,8 +176,12 @@ const Main = ({ path }: any) => {
           <div className="h-full">
             <Content
               userData={userDataGoogle}
-              setContentLoaded={setContentLoaded}
               contentLoaded={contentLoaded}
+              setSendAlert={setSendAlert}
+              setAlertMessage={setAlertMessage}
+              sendAlert={sendAlert}
+              alertMessage={alertMessage}
+              posts={posts}
             />
           </div>
         ) : null}
