@@ -396,99 +396,97 @@ const ChatRoom = ({ userData }: any) => {
         </section>
       )}
 
-      <section className="sticky bottom-0">
-        <div className="flex flex-col items-center relative">
-          {/* scroll down button */}
-          {scrollDownButton ? (
-            <div className=" absolute top-[-48px] z-50 ">
-              <button
-                className="p-[6px] rounded-full cursor-pointer bg-primary "
-                onClick={() => handleScrollDown()}
-              >
-                <ArrowDown className="text-[12px] font-bold text-primary-foreground" />
-              </button>
+      <section className="flex flex-col items-center relative">
+        {/* scroll down button */}
+        {scrollDownButton ? (
+          <div className=" absolute top-[-48px] z-50 ">
+            <button
+              className="p-[6px] rounded-full cursor-pointer bg-primary "
+              onClick={() => handleScrollDown()}
+            >
+              <ArrowDown className="text-[12px] font-bold text-primary-foreground" />
+            </button>
+          </div>
+        ) : null}
+
+        <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
+          {reply && !reply.oldTextToUpDate ? (
+            <div
+              className="bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer"
+              onClick={() => handleScrollToView(reply.parentId)}
+            >
+              <header className="flex items-center justify-between">
+                <p className="text-[15px]">
+                  {reply.userId === userData?.userId ? "You" : reply.name}
+                </p>
+                <button
+                  className="w-[20px] h-[20px] cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReply(null);
+                  }}
+                >
+                  <MdCancel className="size-full" />
+                </button>
+              </header>
+
+              <p className="text-[12px] text-muted-foreground">
+                {reply.text.length > 200
+                  ? reply.text.slice(0, 200) + "..."
+                  : reply.text}
+              </p>
             </div>
-          ) : null}
+          ) : (
+            /* updating Message */
+            <div
+              className={`bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer ${
+                reply ? "block" : "hidden"
+              }`}
+              onClick={() => handleScrollToView(reply?.documentId)}
+            >
+              <header className="flex items-center justify-between">
+                <p className="text-[15px]">Edit Message...</p>
+                <button
+                  className="w-[20px] h-[20px] cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReply(null);
+                  }}
+                >
+                  <MdCancel className="size-full" />
+                </button>
+              </header>
 
-          <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
-            {reply && !reply.oldTextToUpDate ? (
-              <div
-                className="bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer"
-                onClick={() => handleScrollToView(reply.parentId)}
-              >
-                <header className="flex items-center justify-between">
-                  <p className="text-[15px]">
-                    {reply.userId === userData.userId ? "You" : reply.name}
-                  </p>
-                  <button
-                    className="w-[20px] h-[20px] cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setReply(null);
-                    }}
-                  >
-                    <MdCancel className="size-full" />
-                  </button>
-                </header>
+              <p className="text-[12px] text-muted-foreground">
+                {reply?.oldTextToUpDate > 200
+                  ? reply?.oldTextToUpDate.slice(0, 200) + "..."
+                  : reply?.oldTextToUpDate}
+              </p>
+            </div>
+          )}
 
-                <p className="text-[12px] text-muted-foreground">
-                  {reply.text.length > 200
-                    ? reply.text.slice(0, 200) + "..."
-                    : reply.text}
-                </p>
-              </div>
-            ) : (
-              /* updating Message */
-              <div
-                className={`bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer ${
-                  reply ? "block" : "hidden"
-                }`}
-                onClick={() => handleScrollToView(reply?.documentId)}
-              >
-                <header className="flex items-center justify-between">
-                  <p className="text-[15px]">Edit Message...</p>
-                  <button
-                    className="w-[20px] h-[20px] cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setReply(null);
-                    }}
-                  >
-                    <MdCancel className="size-full" />
-                  </button>
-                </header>
-
-                <p className="text-[12px] text-muted-foreground">
-                  {reply?.oldTextToUpDate > 200
-                    ? reply?.oldTextToUpDate.slice(0, 200) + "..."
-                    : reply?.oldTextToUpDate}
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
-              <textarea
-                ref={textareaRef}
-                onInput={handleInput}
-                placeholder="Write a comment..."
-                className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <button
-                className="size-fit cursor-pointer sticky top-0"
-                onClick={() => handleSendMessage()}
-              >
-                {sending ? (
-                  <div
-                    className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
+          <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
+            <textarea
+              ref={textareaRef}
+              onInput={handleInput}
+              placeholder="Write a comment..."
+              className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            <button
+              className="size-fit cursor-pointer sticky top-0"
+              onClick={() => handleSendMessage()}
+            >
+              {sending ? (
+                <div
+                  className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
                 "
-                  ></div>
-                ) : (
-                  <SendHorizonalIcon />
-                )}
-              </button>
-            </div>
+                ></div>
+              ) : (
+                <SendHorizonalIcon />
+              )}
+            </button>
           </div>
         </div>
       </section>
