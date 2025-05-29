@@ -210,7 +210,8 @@ const ChatRoom = ({ userData }: any) => {
 
   const handleTag = (userId: string, userName: string) => {
     /* returns null if user is already tagged  */
-    if (tagging.some((tag: any) => tag.includes(userId))) {
+    const existingTag = tagging.filter((tag: any) => tag.userId === userId);
+    if (existingTag.length > 0) {
       return null;
     }
     const textarea: HTMLTextAreaElement | null = textareaRef.current;
