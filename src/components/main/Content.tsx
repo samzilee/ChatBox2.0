@@ -161,7 +161,7 @@ const Content = ({
     );
   } else {
     return (
-      <main className="h-dvh bg-background text-card-foreground flex flex-col scroll-smooth overflow-y-auto  pt-[58px]">
+      <main className="h-full max-h-dvh bg-background text-card-foreground flex flex-col scroll-smooth overflow-y-auto  pt-[58px]">
         <div className="overflow-y-auto">
           {/* Alert */}
           {sendAlert ? (
