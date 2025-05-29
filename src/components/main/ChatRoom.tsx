@@ -153,6 +153,7 @@ const ChatRoom = ({ userData }: any) => {
         setMessage("");
         setTagging([]);
         setReply(null);
+        await handleListChat();
         handleScrollDown();
       } else {
         setSendAlert(true);
@@ -276,6 +277,23 @@ const ChatRoom = ({ userData }: any) => {
     textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
   };
 
+  const renderTaggedText = (text: string, tagged: any[]) => {
+    const usernames = tagged.map((tag) => "@" + tag.userName);
+    const parts = text.split(/(\s+)/); // Keep spaces while splitting
+
+    return parts.map((part, index) => {
+      const matchingTag = usernames.find((name) => part === name);
+      if (matchingTag) {
+        return (
+          <span key={index} className="underline text-blue-300">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   if (loadingChat && chats.length === 0) {
     return (
       <div className="h-full p-2 flex justify-center items-center bg-background  pt-[58px]">
@@ -362,28 +380,12 @@ const ChatRoom = ({ userData }: any) => {
 
                     <div className="flex flex-col">
                       {/* text */}
-                      {chat.tagged.length > 0 ? (
-                        <p className="text-[14px] whitespace-pre-wrap">
-                          {chat.tagged.map((tag: any) => {
-                            if (chat.text.includes("@" + tag.userName)) {
-                              return (
-                                <>
-                                  <span className="underline text-blue-300">
-                                    {"@" + tag.userName}
-                                  </span>
-                                  {chat.text.split("@" + tag.userName)[1]}
-                                </>
-                              );
-                            } else {
-                              return chat.text;
-                            }
-                          })}
-                        </p>
-                      ) : (
-                        <p className="text-[14px] whitespace-pre-wrap">
-                          {chat.text}
-                        </p>
-                      )}
+                      <p className="text-[14px] whitespace-pre-wrap">
+                        {chat.tagged.length > 0
+                          ? renderTaggedText(chat.text, chat.tagged)
+                          : chat.text}
+                      </p>
+
                       <div className="flex gap-3 justify-between">
                         {/* date */}
                         <p className="text-[12px] text-gray-200/65 font-semibold text-end ">
@@ -451,28 +453,11 @@ const ChatRoom = ({ userData }: any) => {
                     ) : null}
 
                     <div className="flex-1">
-                      {chat.tagged.length > 0 ? (
-                        <p className="text-[14px] whitespace-pre-wrap">
-                          {chat.tagged.map((tag: any) => {
-                            if (chat.text.includes("@" + tag.userName)) {
-                              return (
-                                <>
-                                  <span className="underline text-blue-300">
-                                    {"@" + tag.userName}
-                                  </span>
-                                  {chat.text.split("@" + tag.userName)[1]}
-                                </>
-                              );
-                            } else {
-                              return chat.text;
-                            }
-                          })}
-                        </p>
-                      ) : (
-                        <p className="text-[14px] whitespace-pre-wrap">
-                          {chat.text}
-                        </p>
-                      )}
+                      <p className="text-[14px] whitespace-pre-wrap">
+                        {chat.tagged.length > 0
+                          ? renderTaggedText(chat.text, chat.tagged)
+                          : chat.text}
+                      </p>
                     </div>
                     <p
                       className={`text-[12px] text-muted-foreground font-semibold ${
