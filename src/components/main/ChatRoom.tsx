@@ -218,7 +218,7 @@ const ChatRoom = ({ userData }: any) => {
     const textarea: HTMLTextAreaElement | null = textareaRef.current;
     if (textarea) {
       setMessage((prev: string) => {
-        return "@" + userName + " " + prev;
+        return prev + " " + "@" + userName;
       });
       textarea.value = message;
       textarea.focus();
