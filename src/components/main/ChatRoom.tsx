@@ -26,6 +26,8 @@ const ChatRoom = ({ userData }: any) => {
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [scrollDownButton, setScrollDownButton] = useState<boolean>(false);
   const [editMessageMode, setEditMessageMobe] = useState<boolean>(false);
+  const [tagging, setTagging] = useState<any>([]);
+  const [clearTags, setClearTags] = useState<boolean>(false);
 
   useEffect(() => {
     handleListChat();
@@ -96,36 +98,60 @@ const ChatRoom = ({ userData }: any) => {
 
   const handleSendMessage = async () => {
     if (message === "") return;
-    setSending(true);
     try {
       if (chats.length === 100 && !reply?.oldTextToUpDate) {
         await deleteDocument("mainroom", chats[0].$id);
       }
       if (userData) {
-        if (editMessageMode) {
-          await updateDocument("mainroom", reply.documentId, {
-            text: message,
-            edited: true,
-          });
-          setEditMessageMobe(false);
-        } else if (reply) {
-          await createDocument("mainroom", {
-            text: message,
-            senderId: userData.userId,
-            senderName: userData.name || userData.given_name,
-            senderAvatar: userData.picture,
-            replies: reply,
-          });
+        setSending(true);
+        /*   */
+        if (editMessageMode || tagging.length > 0 || reply) {
+          if (editMessageMode) {
+            await updateDocument("mainroom", reply.documentId, {
+              text: message,
+              edited: true,
+            });
+            setEditMessageMobe(false);
+          } else if (tagging.length > 0) {
+            if (reply) {
+              await createDocument("mainroom", {
+                text: message,
+                senderId: userData.userId,
+                senderName: userData.given_name,
+                senderAvatar: userData.picture,
+                replies: reply,
+                tagged: tagging,
+              });
+            } else {
+              await createDocument("mainroom", {
+                text: message,
+                senderId: userData.userId,
+                senderName: userData.given_name,
+                senderAvatar: userData.picture,
+                tagged: tagging,
+              });
+            }
+            handleClearTags();
+          } else {
+            await createDocument("mainroom", {
+              text: message,
+              senderId: userData.userId,
+              senderName: userData.given_name,
+              senderAvatar: userData.picture,
+              replies: reply,
+            });
+          }
         } else {
           await createDocument("mainroom", {
             text: message,
             senderId: userData.userId,
-            senderName: userData.name || userData.given_name,
+            senderName: userData.given_name,
             senderAvatar: userData.picture,
           });
         }
         setSending(false);
         setMessage("");
+        setTagging([]);
         setReply(null);
         handleScrollDown();
       } else {
@@ -137,19 +163,18 @@ const ChatRoom = ({ userData }: any) => {
     } catch (error) {
       console.log(error);
       setSending(false);
-      /* setSendAlert(true);
+      setSendAlert(true);
       setAlertMessage(
         "Hmm... couldn't send that message. Want to give it another try?"
-      ); */
+      );
     }
   };
 
   const handleDeleteMessage = async (documentID: string) => {
     try {
       setDeletingMessage(true);
-      const result = await deleteDocument("mainroom", documentID);
+      await deleteDocument("mainroom", documentID);
       setDeletingMessage(false);
-      console.log(result);
     } catch (error) {
       console.log(error);
       setDeletingMessage(false);
@@ -183,6 +208,26 @@ const ChatRoom = ({ userData }: any) => {
     }
   };
 
+  const handleTag = (userId: string, userName: string) => {
+    /* returns null if user is already tagged  */
+    if (tagging.some((tag: any) => tag.includes(userId))) {
+      return null;
+    }
+    const textarea: HTMLTextAreaElement | null = textareaRef.current;
+    if (textarea) {
+      setMessage((prev: string) => {
+        return "@" + userName + " " + prev;
+      });
+      textarea.value = message;
+      textarea.focus();
+      setTagging((prev: any) => {
+        return [{ userId: userId, userName: userName }, ...prev];
+      });
+      handleInput();
+      setClearTags(true);
+    }
+  };
+
   const handleScrollToView = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -212,6 +257,16 @@ const ChatRoom = ({ userData }: any) => {
           chatScroll.scrollHeight - 100
       );
     }
+  };
+
+  const handleClearTags = () => {
+    tagging.map((tag: any) => {
+      setMessage((prev: string) => {
+        return prev?.split(tag.userId)[1] || "";
+      });
+    });
+    setTagging([]);
+    setClearTags(false);
   };
 
   const handleInput = () => {
@@ -306,9 +361,28 @@ const ChatRoom = ({ userData }: any) => {
 
                     <div className="flex flex-col">
                       {/* text */}
-                      <p className="text-[14px] whitespace-pre-wrap">
-                        {chat.text}
-                      </p>
+                      {chat.tagged.length > 0 ? (
+                        <p className="text-[14px] whitespace-pre-wrap">
+                          {chat.tagged.map((tag: any) => {
+                            if (chat.text.includes("@" + tag.userName)) {
+                              return (
+                                <>
+                                  <span className="underline text-blue-300">
+                                    {"@" + tag.userName}
+                                  </span>
+                                  {chat.text.split("@" + tag.userName)[1]}
+                                </>
+                              );
+                            } else {
+                              return chat.text;
+                            }
+                          })}
+                        </p>
+                      ) : (
+                        <p className="text-[14px] whitespace-pre-wrap">
+                          {chat.text}
+                        </p>
+                      )}
                       <div className="flex gap-3 justify-between">
                         {/* date */}
                         <p className="text-[12px] text-gray-200/65 font-semibold text-end ">
@@ -344,7 +418,14 @@ const ChatRoom = ({ userData }: any) => {
 
                       {/* Name and Date */}
                       <div>
-                        <p>{chat.senderName}</p>
+                        <button
+                          onClick={() =>
+                            handleTag(chat.senderId, chat.senderName)
+                          }
+                          className="cursor-pointer"
+                        >
+                          {chat.senderName}
+                        </button>
                         <p className="text-[12px] text-muted-foreground font-semibold">
                           {formatDate(new Date(chat.$createdAt))}
                         </p>{" "}
@@ -369,9 +450,28 @@ const ChatRoom = ({ userData }: any) => {
                     ) : null}
 
                     <div className="flex-1">
-                      <p className="text-[14px] whitespace-pre-wrap">
-                        {chat.text}
-                      </p>
+                      {chat.tagged.length > 0 ? (
+                        <p className="text-[14px] whitespace-pre-wrap">
+                          {chat.tagged.map((tag: any) => {
+                            if (chat.text.includes("@" + tag.userName)) {
+                              return (
+                                <>
+                                  <span className="underline text-blue-300">
+                                    {"@" + tag.userName}
+                                  </span>
+                                  {chat.text.split("@" + tag.userName)[1]}
+                                </>
+                              );
+                            } else {
+                              return chat.text;
+                            }
+                          })}
+                        </p>
+                      ) : (
+                        <p className="text-[14px] whitespace-pre-wrap">
+                          {chat.text}
+                        </p>
+                      )}
                     </div>
                     <p
                       className={`text-[12px] text-muted-foreground font-semibold ${
@@ -451,6 +551,7 @@ const ChatRoom = ({ userData }: any) => {
                   onClick={(e) => {
                     e.stopPropagation();
                     setReply(null);
+                    setMessage("");
                   }}
                 >
                   <MdCancel className="size-full" />
@@ -488,6 +589,20 @@ const ChatRoom = ({ userData }: any) => {
               )}
             </button>
           </div>
+
+          {/* clear tag button */}
+          {clearTags ? (
+            <div>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="cursor-pointer"
+                onClick={() => handleClearTags()}
+              >
+                Clear Tags
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 

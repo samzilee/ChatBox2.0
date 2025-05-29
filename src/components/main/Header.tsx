@@ -6,13 +6,14 @@ import { useEffect, useRef, useState } from "react";
 import settingsIcon from "../../Assets/settings-icon.png";
 import signOutIcon from "../../Assets/sign-out-icon.png";
 import { signOut } from "../../utils/auth.utils.ts";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Header = ({ userData }: any) => {
   const { open, setOpen, openMobile, setOpenMobile, isMobile } = useSidebar();
   const [accBlock, setAccBlock] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
   const accBlockRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (loggingOut) {
@@ -41,7 +42,9 @@ const Header = ({ userData }: any) => {
         setLoggingOut(true);
         const result = await signOut();
         if (result) {
-          window.location.href = "/logIn";
+          document.body.style.opacity = "1";
+          document.body.style.pointerEvents = "auto";
+          navigate("/logIn");
         }
       } catch (error) {
         setLoggingOut(false);

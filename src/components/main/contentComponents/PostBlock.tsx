@@ -213,6 +213,37 @@ const PostBlock = ({ postMode, setPostMode, userData, posts }: any) => {
             onChange={(e) => {
               if (e.target.files) {
                 const file = e.target.files[0];
+
+                /* checking if file size is greater than  5MB*/
+                if (file.size / (1024 * 1024) > 5) {
+                  setError(true);
+                  setErrorMessage(
+                    `The file you selected is too large(${(
+                      file.size /
+                      (1024 * 1024)
+                    ).toFixed(
+                      2
+                    )} MB). Maximum allowed size is 5MB. Please choose a smaller file.`
+                  );
+                  return (imageInputRef.current.value = null);
+                }
+
+                /* list of supported file type */
+                const supportedExtensions = ["mp4", "gif", "png", "svg", "jpg"];
+                /* return "true" or "false" */
+                const fileSupported = supportedExtensions.some((extension) =>
+                  file.type.includes(extension)
+                );
+
+                /* checking if "fileSupported" is false */
+                if (!fileSupported) {
+                  setError(true);
+                  setErrorMessage(
+                    "File type not supported.Please upload a valid file format (like JPG, PNG, SVG, MP4, GIF,)."
+                  );
+                  return (imageInputRef.current.value = null);
+                }
+
                 setImageFile(file);
                 if (file) {
                   const url = URL.createObjectURL(file);
