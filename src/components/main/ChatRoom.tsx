@@ -435,6 +435,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
                           <MdReply />
                         </Button>
                       </div>
+
                       {deletingMessage ? (
                         <Button variant="destructive" size="icon">
                           <div className="w-5 h-5 border-3 border-red-400 border-t-transparent rounded-full animate-spin"></div>
@@ -706,6 +707,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
                 <div
                   className="w-5 h-5 border-2 border-card-foreground border-t-transparent rounded-full animate-spin
                 "
+                  onClick={(e: any) => e.stopPropagation()}
                 ></div>
               ) : (
                 <SendHorizonalIcon />
