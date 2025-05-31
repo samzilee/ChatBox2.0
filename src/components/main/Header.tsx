@@ -1,10 +1,10 @@
-import webIcon from "../../Assets/websiteIcon2.png";
+import webIcon from "../../Assets/images/websiteIcon2.png";
 import { useSidebar } from "../ui/sidebar";
 import { AiOutlineMenu } from "react-icons/ai";
 import { Button } from "../ui/button";
 import { useEffect, useRef, useState } from "react";
-import settingsIcon from "../../Assets/settings-icon.png";
-import signOutIcon from "../../Assets/sign-out-icon.png";
+import settingsIcon from "../../Assets/images/settings-icon.png";
+import signOutIcon from "../../Assets/images/sign-out-icon.png";
 import { signOut } from "../../utils/auth.utils.ts";
 import { NavLink, useNavigate } from "react-router-dom";
 import Settings from "./Settings.tsx";

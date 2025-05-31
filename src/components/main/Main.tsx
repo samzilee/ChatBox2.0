@@ -89,8 +89,9 @@ const Main = ({ path }: any) => {
     try {
       console.log("saving user in database...");
       await createDocumentCustomID("Users", userData.userId, userData);
+      Get_User_Data_From_db(userData);
     } catch (error) {
-      /*  console.clear(); */
+      console.log(error);
       console.log("user exist in database");
       console.log("updating userData...");
       Get_User_Data_From_db(userData);
@@ -100,6 +101,27 @@ const Main = ({ path }: any) => {
   const Get_User_Data_From_db = async (userData: any) => {
     try {
       const response = await getUser(userData.userId);
+      if (!response.customData) {
+        handleUpdateUser(userData);
+      } else {
+        setUserData({
+          userId: response.userId,
+          email: response.email,
+          given_name: response.given_name,
+          name: response.name,
+          picture: response.picture,
+          email_verified: response.email_verified,
+          customData: response.customData,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleUpdateUser = async (userData: any) => {
+    try {
+      const response = await updateDocument("Users", userData.userId, userData);
       setUserData({
         userId: response.userId,
         email: response.email,
@@ -109,17 +131,6 @@ const Main = ({ path }: any) => {
         email_verified: response.email_verified,
         customData: response.customData,
       });
-      if (!response.customData) {
-        handleUpdateUser;
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleUpdateUser = async (userData: any) => {
-    try {
-      await updateDocument("Users", userData.userId, userData);
       console.log("user Updated");
     } catch (error) {
       console.log(error);
@@ -144,7 +155,9 @@ const Main = ({ path }: any) => {
           </div>
         ) : null}
 
-        {path === "chatroom" ? <ChatRoom userData={userData} /> : null}
+        {path === "chatroom" ? (
+          <ChatRoom userData={userData} setUserData={setUserData} />
+        ) : null}
 
         {sessionExpired ? (
           <Alert message={alertMessage} setActive={setSessionExpired} />

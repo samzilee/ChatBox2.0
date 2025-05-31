@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
-import GalleryIcon from "../../Assets/GalleryIcon.png";
+import GalleryIcon from "../../Assets/images/GalleryIcon.png";
+import thumbsUpIcon from "../../Assets/images/thumbs-up-icon.png";
+import commentIcon from "../../Assets/images/comments-icons.png";
+
 import PostBlock from "./contentComponents/PostBlock";
-import thumbsUpIcon from "../../Assets/thumbs-up-icon.png";
-import commentIcon from "../../Assets/comments-icons.png";
 
 import { useSidebar } from "../ui/sidebar";
 import { AiOutlineComment } from "react-icons/ai";

@@ -1,7 +1,7 @@
 import { AiOutlineClose } from "react-icons/ai";
 import { useSidebar } from "@/components/ui/sidebar";
-import thumbsUpIcon from "@/Assets/thumbs-up-icon.png";
-import commentIcon from "@/Assets/comments-icons.png";
+import thumbsUpIcon from "@/Assets/images/thumbs-up-icon.png";
+import commentIcon from "@/Assets/images/comments-icons.png";
 import { SendHorizonalIcon, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { updateDocument, deleteDocument } from "@/utils/db";

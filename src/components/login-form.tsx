@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { googleLogin, getUserData } from "../utils/auth.utils.ts";
-import googleLogo from "../Assets/Logo-google-icon-PNG.png";
-import websiteLogo from "../Assets/websiteIcon3.png";
+import googleLogo from "../Assets/images/Logo-google-icon-PNG.png";
+import websiteLogo from "../Assets/images/websiteIcon3.png";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 

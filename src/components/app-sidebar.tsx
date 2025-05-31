@@ -1,5 +1,5 @@
 import * as React from "react";
-import webIcon from "@/Assets/websiteIcon2.png";
+import webIcon from "@/Assets/images/websiteIcon2.png";
 
 import {
   Sidebar,

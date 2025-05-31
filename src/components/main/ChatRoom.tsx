@@ -12,7 +12,11 @@ import Alert from "../Alert";
 import { MdCancel, MdReply } from "react-icons/md";
 import { Button } from "../ui/button";
 
-const ChatRoom = ({ userData }: any) => {
+import sentSound from "@/Assets/sounds/chat-sent.mp3";
+import receiveSound from "@/Assets/sounds/message-notification-190034.mp3";
+import mentionSound from "@/Assets/sounds/mention-reply.mp3";
+// "setUserData" is for the appwrite real-time subscribtion. when the sub runs and userData is "null", userData will stay "null". ima using setUserData to get the "prev" data
+const ChatRoom = ({ userData, setUserData }: any) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollElement = useRef<HTMLElement | null>(null);
 
@@ -29,6 +33,47 @@ const ChatRoom = ({ userData }: any) => {
   const [tagging, setTagging] = useState<any>([]);
   const [clearTags, setClearTags] = useState<boolean>(false);
   const [themeColor, setThemeColor] = useState<string>("");
+
+  const sendAudioRef = useRef<HTMLAudioElement>(null);
+  const recevieAudioRef = useRef<HTMLAudioElement>(null);
+  const mentionAudioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    sendAudioRef.current = new Audio(sentSound);
+    recevieAudioRef.current = new Audio(receiveSound);
+    mentionAudioRef.current = new Audio(mentionSound);
+
+    sendAudioRef.current.load();
+    recevieAudioRef.current.load();
+    mentionAudioRef.current.load();
+  }, []);
+
+  const handleMessageSent = () => {
+    //mesage sent logic
+    const audio = sendAudioRef.current;
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play();
+    }
+  };
+
+  const handleRecevieMessage = () => {
+    //Recevie Message sent logic
+    const audio = recevieAudioRef.current;
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play();
+    }
+  };
+
+  const handleMention = () => {
+    //mention sent logic
+    const audio = mentionAudioRef.current;
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play();
+    }
+  };
 
   useEffect(() => {
     handleListChat();
@@ -60,6 +105,30 @@ const ChatRoom = ({ userData }: any) => {
           setChats((prev: any) => {
             return [...prev, response.payload];
           });
+
+          // using "setUserData" to get "prev.userId" cuz of appwrite subscribtion constant data - "ASCD"
+          setUserData((prev: any) => {
+            // check if the current user didn't send the message, else if current user sent the message! message sent audio will be played.
+            if (prev.userId !== response.payload.senderId) {
+              //will return "[]" if current user is not tagged or mentioned.
+              const tagged = response.payload?.tagged.filter(
+                (tag: any) => tag.userId === prev.userId
+              );
+
+              //if current user is not tagged, message received audio will be played, else it plays mention/tagged audio.
+              if (
+                prev.userId !== response.payload?.replies?.userId &&
+                tagged.length === 0
+              ) {
+                handleRecevieMessage();
+              } else {
+                handleMention();
+              }
+            } else {
+              handleMessageSent();
+            }
+            return prev;
+          });
         }
       }
     );
@@ -76,6 +145,7 @@ const ChatRoom = ({ userData }: any) => {
     ) {
       chatScroll.scrollTo({
         top: chatScroll.scrollHeight,
+        behavior: "instant",
       });
     }
   }, [chats]);
@@ -154,7 +224,7 @@ const ChatRoom = ({ userData }: any) => {
             await createDocument("mainroom", {
               text: message,
               senderId: userData.userId,
-              senderName: userData.given_name,
+              senderName: userData.given_name || userData.name,
               senderAvatar: userData.picture,
               themeColor: themeColor,
               replies: reply,
@@ -164,7 +234,7 @@ const ChatRoom = ({ userData }: any) => {
           await createDocument("mainroom", {
             text: message,
             senderId: userData.userId,
-            senderName: userData.given_name,
+            senderName: userData.given_name || userData.name,
             senderAvatar: userData.picture,
             themeColor: themeColor,
           });
@@ -173,7 +243,6 @@ const ChatRoom = ({ userData }: any) => {
         setMessage("");
         setTagging([]);
         setReply(null);
-        await handleListChat();
         handleScrollDown();
       } else {
         setSendAlert(true);
@@ -385,7 +454,7 @@ const ChatRoom = ({ userData }: any) => {
                     {/* replies if any */}
                     {chat.replies ? (
                       <div
-                        className="bg-green-900 rounded cursor-pointer flex gap-1"
+                        className="bg-green-900/80 rounded cursor-pointer flex gap-1"
                         onClick={() =>
                           handleScrollToView(chat.replies.parentId)
                         }
@@ -443,7 +512,7 @@ const ChatRoom = ({ userData }: any) => {
                   key={chat.$id}
                   id={chat.$id}
                 >
-                  <div className="flex flex-col gap-1 bg-card w-fit p-2 rounded-md  max-w-[80%] md:max-w-[500px]">
+                  <div className="flex flex-col gap-1 bg-card w-fit p-2 rounded-md max-w-[80%] md:max-w-[500px]">
                     <div className="flex gap-2">
                       {/* profile */}
                       <img

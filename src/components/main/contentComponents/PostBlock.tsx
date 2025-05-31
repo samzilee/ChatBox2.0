@@ -1,7 +1,7 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { AiOutlineClose } from "react-icons/ai";
-import GalleryIcon from "../../../Assets/GalleryIcon.png";
+import GalleryIcon from "../../../Assets/images/GalleryIcon.png";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
