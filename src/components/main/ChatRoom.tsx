@@ -145,7 +145,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
     ) {
       chatScroll.scrollTo({
         top: chatScroll.scrollHeight,
-        behavior: "instant",
       });
     }
   }, [chats]);
