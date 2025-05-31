@@ -28,6 +28,7 @@ const ChatRoom = ({ userData }: any) => {
   const [editMessageMode, setEditMessageMobe] = useState<boolean>(false);
   const [tagging, setTagging] = useState<any>([]);
   const [clearTags, setClearTags] = useState<boolean>(false);
+  const [themeColor, setThemeColor] = useState<string>("");
 
   useEffect(() => {
     handleListChat();
@@ -79,6 +80,21 @@ const ChatRoom = ({ userData }: any) => {
     }
   }, [chats]);
 
+  useEffect(() => {
+    if (userData) {
+      setThemeColor(stringToColor(userData.userId));
+    }
+  }, [userData]);
+
+  const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = `hsl(${hash % 360}, 60%, 70%)`; // HSL makes it easier to control readability
+    return color;
+  };
+
   const handleListChat = async () => {
     try {
       setLoadingChat(true);
@@ -119,6 +135,7 @@ const ChatRoom = ({ userData }: any) => {
                 senderId: userData.userId,
                 senderName: userData.given_name,
                 senderAvatar: userData.picture,
+                themeColor: themeColor,
                 replies: reply,
                 tagged: tagging,
               });
@@ -128,6 +145,7 @@ const ChatRoom = ({ userData }: any) => {
                 senderId: userData.userId,
                 senderName: userData.given_name,
                 senderAvatar: userData.picture,
+                themeColor: themeColor,
                 tagged: tagging,
               });
             }
@@ -138,6 +156,7 @@ const ChatRoom = ({ userData }: any) => {
               senderId: userData.userId,
               senderName: userData.given_name,
               senderAvatar: userData.picture,
+              themeColor: themeColor,
               replies: reply,
             });
           }
@@ -147,6 +166,7 @@ const ChatRoom = ({ userData }: any) => {
             senderId: userData.userId,
             senderName: userData.given_name,
             senderAvatar: userData.picture,
+            themeColor: themeColor,
           });
         }
         setSending(false);
@@ -192,6 +212,7 @@ const ChatRoom = ({ userData }: any) => {
       name: chat.senderName,
       parentId: chat.$id,
       userId: chat.senderId,
+      themeColor: chat.themeColor,
     });
   };
   const handleUpdateMessage = (documentID: string, textToUpdate: string) => {
@@ -218,7 +239,7 @@ const ChatRoom = ({ userData }: any) => {
     const textarea: HTMLTextAreaElement | null = textareaRef.current;
     if (textarea) {
       setMessage((prev: string) => {
-        return prev + " " + "@" + userName;
+        return prev + " " + "@" + userName + " ";
       });
       textarea.value = message;
       textarea.focus();
@@ -364,17 +385,30 @@ const ChatRoom = ({ userData }: any) => {
                     {/* replies if any */}
                     {chat.replies ? (
                       <div
-                        className="bg-green-900 rounded px-2 py-1 cursor-pointer flex flex-col"
+                        className="bg-green-900 rounded cursor-pointer flex gap-1"
                         onClick={() =>
                           handleScrollToView(chat.replies.parentId)
                         }
                       >
-                        <p className="text-[13px]">{chat.replies.name}</p>
-                        <p className="text-[12px] text-muted-foreground">
-                          {chat.replies.text.length > 150
-                            ? chat.replies.text.slice(0, 150) + "..."
-                            : chat.replies.text}
-                        </p>
+                        <div
+                          className="w-1 h-full rounded-r-md"
+                          style={{ backgroundColor: chat.replies.themeColor }}
+                        ></div>
+                        <div className="flex-1 flex flex-col pr-2 py-1">
+                          <p
+                            className="text-[13px]"
+                            style={{ color: chat.replies.themeColor }}
+                          >
+                            {chat.replies.name === userData.name
+                              ? "You"
+                              : chat.replies.name}
+                          </p>
+                          <p className="text-[12px] text-muted-foreground">
+                            {chat.replies.text.length > 150
+                              ? chat.replies.text.slice(0, 150) + "..."
+                              : chat.replies.text}
+                          </p>
+                        </div>
                       </div>
                     ) : null}
 
@@ -409,7 +443,7 @@ const ChatRoom = ({ userData }: any) => {
                   key={chat.$id}
                   id={chat.$id}
                 >
-                  <div className="flex flex-col gap-1 bg-card w-fit p-2 rounded-md max-w-[80%] md:max-w-[500px]">
+                  <div className="flex flex-col gap-1 bg-card w-fit p-2 rounded-md  max-w-[80%] md:max-w-[500px]">
                     <div className="flex gap-2">
                       {/* profile */}
                       <img
@@ -426,6 +460,7 @@ const ChatRoom = ({ userData }: any) => {
                             handleTag(chat.senderId, chat.senderName)
                           }
                           className="cursor-pointer"
+                          style={{ color: chat.themeColor }}
                         >
                           {chat.senderName}
                         </button>
@@ -438,17 +473,31 @@ const ChatRoom = ({ userData }: any) => {
                     {/* replies if any */}
                     {chat.replies ? (
                       <div
-                        className="bg-background rounded px-2 py-1 cursor-pointer flex flex-col"
+                        className="bg-background rounded cursor-pointer flex gap-1"
                         onClick={() =>
                           handleScrollToView(chat.replies.parentId)
                         }
                       >
-                        <p className="text-[13px]">{chat.replies.name}</p>
-                        <p className="text-[12px] text-muted-foreground">
-                          {chat.replies.text.length > 150
-                            ? chat.replies.text.slice(0, 150) + "..."
-                            : chat.replies.text}
-                        </p>
+                        <div>
+                          <div
+                            className="w-1 h-full rounded-r-md border"
+                            style={{ backgroundColor: chat.replies.themeColor }}
+                          ></div>
+                        </div>
+
+                        <div className="flex-1 flex flex-col pr-2 py-1">
+                          <p
+                            className="text-[13px]"
+                            style={{ color: chat.replies.themeColor }}
+                          >
+                            {chat.replies.name}
+                          </p>
+                          <p className="text-[12px] text-muted-foreground">
+                            {chat.replies.text.length > 150
+                              ? chat.replies.text.slice(0, 150) + "..."
+                              : chat.replies.text}
+                          </p>
+                        </div>
                       </div>
                     ) : null}
 
@@ -498,57 +547,76 @@ const ChatRoom = ({ userData }: any) => {
         <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
           {reply && !reply.oldTextToUpDate ? (
             <div
-              className="bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer"
+              className="bg-card w-full flex  rounded cursor-pointer gap-1
+              "
               onClick={() => handleScrollToView(reply.parentId)}
             >
-              <header className="flex items-center justify-between">
-                <p className="text-[15px]">
-                  {reply.userId === userData?.userId ? "You" : reply.name}
-                </p>
-                <button
-                  className="w-[20px] h-[20px] cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setReply(null);
-                  }}
-                >
-                  <MdCancel className="size-full" />
-                </button>
-              </header>
+              <div
+                className="w-1 h-full rounded-r-md"
+                style={{ backgroundColor: reply.themeColor }}
+              ></div>
+              <div className="flex-1 flex flex-col pr-2 py-1">
+                <div className="flex items-center justify-between">
+                  <p
+                    className="text-[15px]"
+                    style={{ color: reply.themeColor }}
+                  >
+                    {reply.userId === userData?.userId ? "You" : reply.name}
+                  </p>
+                  <button
+                    className="w-[20px] h-[20px] cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReply(null);
+                    }}
+                  >
+                    <MdCancel className="size-full" />
+                  </button>
+                </div>
 
-              <p className="text-[12px] text-muted-foreground">
-                {reply.text.length > 200
-                  ? reply.text.slice(0, 200) + "..."
-                  : reply.text}
-              </p>
+                <p className="text-[12px] text-muted-foreground">
+                  {reply.text.length > 200
+                    ? reply.text.slice(0, 200) + "..."
+                    : reply.text}
+                </p>
+              </div>
             </div>
           ) : (
             /* updating Message */
             <div
-              className={`bg-card w-full flex flex-col px-2 py-1 rounded cursor-pointer ${
+              className={`bg-card w-full flex rounded cursor-pointer gap-1 ${
                 reply ? "block" : "hidden"
               }`}
               onClick={() => handleScrollToView(reply?.documentId)}
             >
-              <header className="flex items-center justify-between">
-                <p className="text-[15px]">Edit Message...</p>
-                <button
-                  className="w-[20px] h-[20px] cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setReply(null);
-                    setMessage("");
-                  }}
-                >
-                  <MdCancel className="size-full" />
-                </button>
-              </header>
+              <div
+                className="w-1 h-full rounded-r-md"
+                style={{ backgroundColor: themeColor }}
+              ></div>
 
-              <p className="text-[12px] text-muted-foreground">
-                {reply?.oldTextToUpDate > 200
-                  ? reply?.oldTextToUpDate.slice(0, 200) + "..."
-                  : reply?.oldTextToUpDate}
-              </p>
+              <div className="flex-1 flex flex-col pr-2 py-1 ">
+                <div className="flex items-center justify-between">
+                  <p className="text-[15px]" style={{ color: themeColor }}>
+                    Edit Message...
+                  </p>
+                  <button
+                    className="w-[20px] h-[20px] cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReply(null);
+                      setMessage("");
+                    }}
+                  >
+                    <MdCancel className="size-full" />
+                  </button>
+                </div>
+
+                <p className="text-[12px] text-muted-foreground">
+                  {reply?.oldTextToUpDate > 200
+                    ? reply?.oldTextToUpDate.slice(0, 200) + "..."
+                    : reply?.oldTextToUpDate}
+                </p>
+              </div>
             </div>
           )}
 

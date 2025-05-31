@@ -53,10 +53,15 @@ const updateDocument = async (collectionID:string,documentID:string, data:any) =
     return result;
 }
 
+const getUser = async (userId:string) => {
+    const response = await databases.getDocument("chat_box", "users", userId)
+
+    return response;
+}
 
 
 
 
 
-export {createDocument, createDocumentCustomID, checkForUser, createFile, getFile, deleteFile, listDocument, updateDocument, deleteDocument}
+export {createDocument, createDocumentCustomID, checkForUser, createFile, getFile, deleteFile, listDocument, updateDocument, deleteDocument, getUser}
 

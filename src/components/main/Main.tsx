@@ -8,84 +8,21 @@ import Content from "./Content";
 import Header from "./Header";
 import ChatRoom from "./ChatRoom.tsx";
 import Alert from "../Alert.tsx";
-import {
-  createDocumentCustomID,
-  updateDocument,
-  listDocument,
-} from "@/utils/db";
-import { client } from "@/utils/appWrite";
+import { createDocumentCustomID, getUser, updateDocument } from "@/utils/db";
+
 const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
     undefined
   );
   const [userDataGoogle, setUserDataGoogle] = useState<any>(null);
-  const [contentLoaded, setContentLoaded] = useState<boolean>(false);
+  const [userData, setUserData] = useState<any>(null);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [sendAlert, setSendAlert] = useState<boolean>(false);
-  const [posts, setPosts] = useState<any>([]);
 
   useEffect(() => {
     handleUserData();
   }, []);
-
-  {
-    /* posts realTime upDate */
-  }
-  useEffect(() => {
-    setContentLoaded(false);
-    handleListPosts();
-    const unsubscribe = client.subscribe(
-      `databases.chat_box.collections.posts.documents`,
-      (response: any) => {
-        if (
-          response.events.includes(
-            "databases.*.collections.*.documents.*.delete"
-          )
-        ) {
-          setPosts((prev: any) =>
-            prev.filter((post: any) => post.$id !== response.payload.$id)
-          );
-        } else if (
-          response.events.some(
-            (e: string) => e.includes("create") || e.includes("update")
-          )
-        ) {
-          setPosts((prev: any) => {
-            const exists = prev.find(
-              (post: any) => post.$id === response.payload.$id
-            );
-            if (exists) {
-              return prev.map((post: any) =>
-                post.$id === response.payload.$id ? response.payload : post
-              );
-            } else {
-              return [response.payload, ...prev];
-            }
-          });
-        }
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
-  {
-    /* listPosts */
-  }
-  const handleListPosts = async () => {
-    try {
-      const result = await listDocument("posts", "new-to-old");
-      setPosts(result.documents);
-      setContentLoaded(true);
-    } catch (error) {
-      console.log(error);
-      setContentLoaded(true);
-      setSendAlert(true);
-      setAlertMessage(
-        "Error Loading Posts, Check your internet connection and try again"
-      );
-    }
-  };
 
   const handleUserData = async () => {
     try {
@@ -139,9 +76,11 @@ const Main = ({ path }: any) => {
       handleSaveUser({
         userId: userDataGoogle.userId,
         email: userDataGoogle.email,
+        given_name: userDataGoogle.given_name,
         name: userDataGoogle.name,
         picture: userDataGoogle.picture,
         email_verified: userDataGoogle.email_verified,
+        customData: false,
       });
     }
   }, [userDataGoogle]);
@@ -154,13 +93,34 @@ const Main = ({ path }: any) => {
       /*  console.clear(); */
       console.log("user exist in database");
       console.log("updating userData...");
-      handleUpdateUser(userData);
+      Get_User_Data_From_db(userData);
+    }
+  };
+
+  const Get_User_Data_From_db = async (userData: any) => {
+    try {
+      const response = await getUser(userData.userId);
+      setUserData({
+        userId: response.userId,
+        email: response.email,
+        given_name: response.given_name,
+        name: response.name,
+        picture: response.picture,
+        email_verified: response.email_verified,
+        customData: response.customData,
+      });
+      if (!response.customData) {
+        handleUpdateUser;
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
   const handleUpdateUser = async (userData: any) => {
     try {
       await updateDocument("Users", userData.userId, userData);
+      console.log("user Updated");
     } catch (error) {
       console.log(error);
     }
@@ -170,23 +130,21 @@ const Main = ({ path }: any) => {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <Header userData={userDataGoogle} />
+        <Header userData={userData} />
 
         {path === "home" ? (
           <div className="h-full">
             <Content
-              userData={userDataGoogle}
-              contentLoaded={contentLoaded}
+              userData={userData}
               setSendAlert={setSendAlert}
               setAlertMessage={setAlertMessage}
               sendAlert={sendAlert}
               alertMessage={alertMessage}
-              posts={posts}
             />
           </div>
         ) : null}
 
-        {path === "chatroom" ? <ChatRoom userData={userDataGoogle} /> : null}
+        {path === "chatroom" ? <ChatRoom userData={userData} /> : null}
 
         {sessionExpired ? (
           <Alert message={alertMessage} setActive={setSessionExpired} />

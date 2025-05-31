@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import GalleryIcon from "../../Assets/GalleryIcon.png";
 import PostBlock from "./contentComponents/PostBlock";
@@ -8,7 +8,13 @@ import commentIcon from "../../Assets/comments-icons.png";
 import { useSidebar } from "../ui/sidebar";
 import { AiOutlineComment } from "react-icons/ai";
 import { MdAccountCircle } from "react-icons/md";
-import { updateDocument, deleteDocument, deleteFile } from "@/utils/db";
+import {
+  updateDocument,
+  deleteDocument,
+  deleteFile,
+  listDocument,
+} from "@/utils/db";
+import { client } from "@/utils/appWrite";
 
 import { formatDate } from "../FormatDate";
 import {
@@ -23,19 +29,74 @@ import Alert from "../Alert";
 
 const Content = ({
   userData,
-  contentLoaded,
   setSendAlert,
   setAlertMessage,
   sendAlert,
   alertMessage,
-  posts,
 }: any) => {
+  const [contentLoaded, setContentLoaded] = useState<boolean>(false);
   const [postMode, setPostMode] = useState<boolean>(false);
   const [commentMode, setCommentMode] = useState<boolean>(false);
   const [postToComment, setPostToComment] = useState<any>(null);
   const { isMobile, setOpen } = useSidebar();
   const [activeMore, setActiveMore] = useState<string>("");
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [posts, setPosts] = useState<any>([]);
+
+  useEffect(() => {
+    setContentLoaded(false);
+    handleListPosts();
+    const unsubscribe = client.subscribe(
+      `databases.chat_box.collections.posts.documents`,
+      (response: any) => {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.delete"
+          )
+        ) {
+          setPosts((prev: any) =>
+            prev.filter((post: any) => post.$id !== response.payload.$id)
+          );
+        } else if (
+          response.events.some(
+            (e: string) => e.includes("create") || e.includes("update")
+          )
+        ) {
+          setPosts((prev: any) => {
+            const exists = prev.find(
+              (post: any) => post.$id === response.payload.$id
+            );
+            if (exists) {
+              return prev.map((post: any) =>
+                post.$id === response.payload.$id ? response.payload : post
+              );
+            } else {
+              return [response.payload, ...prev];
+            }
+          });
+        }
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  {
+    /* listPosts */
+  }
+  const handleListPosts = async () => {
+    try {
+      const result = await listDocument("posts", "new-to-old");
+      setPosts(result.documents);
+      setContentLoaded(true);
+    } catch (error) {
+      console.log(error);
+      setContentLoaded(true);
+      setSendAlert(true);
+      setAlertMessage(
+        "Error Loading Posts, Check your internet connection and try again"
+      );
+    }
+  };
 
   const handlePostMode = () => {
     if (!userData)
@@ -304,20 +365,20 @@ const Content = ({
 
                       {post.fileUrl ? (
                         <section
-                          className={`w-full bg-[rgba(170,170,170,0.241)]`}
+                          className={`size-full min-h-[200px] bg-[rgba(170,170,170,0.241)]`}
                         >
                           {post.fileType === "video" ? (
                             <video
                               src={post.fileUrl}
                               controls
-                              className="max-h-[450px] size-full"
+                              className="max-h-[450px] size-full object-cover"
                             />
                           ) : (
                             <img
                               loading="lazy"
                               src={post.fileUrl}
                               alt="posted image"
-                              className="max-h-[450px] size-full object-contain"
+                              className="max-h-[450px] size-full object-fit-cover"
                             />
                           )}
                         </section>

@@ -7,10 +7,12 @@ import settingsIcon from "../../Assets/settings-icon.png";
 import signOutIcon from "../../Assets/sign-out-icon.png";
 import { signOut } from "../../utils/auth.utils.ts";
 import { NavLink, useNavigate } from "react-router-dom";
+import Settings from "./Settings.tsx";
 
 const Header = ({ userData }: any) => {
   const { open, setOpen, openMobile, setOpenMobile, isMobile } = useSidebar();
-  const [accBlock, setAccBlock] = useState<boolean>(false);
+  const [miniProfile, setMiniProfile] = useState<boolean>(false);
+  const [settingsActive, setSettingsActive] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
   const accBlockRef = useRef(null);
   const navigate = useNavigate();
@@ -23,18 +25,18 @@ const Header = ({ userData }: any) => {
   }, [loggingOut]);
 
   const handleMenu = () => {
-    setAccBlock((prev) => {
+    setMiniProfile((prev) => {
       if (prev) return false;
       return true;
     });
   };
 
   useEffect(() => {
-    if (accBlock) {
-      document.addEventListener("scroll", () => setAccBlock(false));
+    if (miniProfile) {
+      document.addEventListener("scroll", () => setMiniProfile(false));
     }
-    document.removeEventListener("scroll", () => setAccBlock(false));
-  }, [accBlock]);
+    document.removeEventListener("scroll", () => setMiniProfile(false));
+  }, [miniProfile]);
 
   const handleSignOut = async () => {
     if (userData) {
@@ -55,7 +57,7 @@ const Header = ({ userData }: any) => {
 
   useEffect(() => {
     const block: any = accBlockRef.current;
-    if (!accBlock && block) return;
+    if (!miniProfile && block) return;
 
     const handleClickOutside = (event: any) => {
       if (!block.contains(event?.target)) {
@@ -65,7 +67,7 @@ const Header = ({ userData }: any) => {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [accBlock]);
+  }, [miniProfile]);
 
   return (
     <header
@@ -125,9 +127,10 @@ const Header = ({ userData }: any) => {
           </div>
         )}
 
+        {/* mini-profile block */}
         <div
           className={`absolute bg-card text-card-foreground right-0 top-[45px] rounded-lg overflow-hidden ${
-            accBlock ? "block" : "hidden"
+            miniProfile ? "block" : "hidden"
           }`}
           ref={accBlockRef}
         >
@@ -161,15 +164,12 @@ const Header = ({ userData }: any) => {
               variant={"secondary"}
               size="sm"
               className="cursor-pointer border-none group"
+              onClick={() => {
+                setMiniProfile(false);
+                setSettingsActive(true);
+              }}
             >
-              <img
-                src={settingsIcon}
-                loading="lazy"
-                alt="icon"
-                width={20}
-                height={20}
-                className=" group-hover:animate-spin "
-              />
+              <img src={settingsIcon} alt="icon" width={20} height={20} />
               Settings
             </Button>
             <Button
@@ -183,6 +183,12 @@ const Header = ({ userData }: any) => {
             </Button>
           </section>
         </div>
+
+        {/* Setting Block */}
+        <Settings
+          settingsActive={settingsActive}
+          setSettingsActive={setSettingsActive}
+        />
       </div>
     </header>
   );
