@@ -168,9 +168,9 @@ const ChatRoom = ({ userData, setUserData }: any) => {
     try {
       setLoadingChat(true);
       const response = await listDocument("mainroom", "old-to-new");
-      setChats(response.documents);
       setLoadingChat(false);
-      handleScrollDown();
+      setChats(response.documents);
+      handleScrollDown("instant");
     } catch (error) {
       console.log(error);
       setLoadingChat(false);
@@ -242,7 +242,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
         setMessage("");
         setTagging([]);
         setReply(null);
-        handleScrollDown();
+        handleScrollDown("smooth");
       } else {
         setSendAlert(true);
         setAlertMessage(
@@ -331,11 +331,12 @@ const ChatRoom = ({ userData, setUserData }: any) => {
     }
   };
 
-  const handleScrollDown = () => {
+  const handleScrollDown = (behavior: any) => {
     const chatSroll = scrollElement.current;
     if (chatSroll) {
       chatSroll.scrollTo({
         top: chatSroll.scrollHeight,
+        behavior: behavior,
       });
     }
   };
@@ -605,8 +606,8 @@ const ChatRoom = ({ userData, setUserData }: any) => {
         {scrollDownButton ? (
           <div className=" absolute top-[-48px] z-50 ">
             <button
-              className="p-[6px] rounded-full cursor-pointer bg-primary "
-              onClick={() => handleScrollDown()}
+              className="p-[6px] rounded-full cursor-pointer bg-primary"
+              onClick={() => handleScrollDown("smooth")}
             >
               <ArrowDown className="text-[12px] font-bold text-primary-foreground" />
             </button>
