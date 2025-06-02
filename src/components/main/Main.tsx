@@ -14,11 +14,12 @@ const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
     undefined
   );
-  const [userDataGoogle, setUserDataGoogle] = useState<any>(null);
   const [userData, setUserData] = useState<any>(null);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [sendAlert, setSendAlert] = useState<boolean>(false);
+  const [userDataFromGoogle, setUserDataFromGoogle] = useState<any>(null);
+  const [num, setNum] = useState<number>(0);
 
   useEffect(() => {
     handleUserData();
@@ -32,11 +33,19 @@ const Main = ({ path }: any) => {
         accessToken: data.providerAccessToken,
         providerAccessTokenExpiry: data.providerAccessTokenExpiry,
       });
+      handleProfileRequest(data.providerAccessToken);
     } catch (error: any) {
       console.log(error);
     }
   };
 
+  useEffect(() => {
+    if (userInfo) {
+      Get_User_Data_From_db(userInfo);
+    }
+  }, [userInfo]);
+
+  /* 
   useEffect(() => {
     if (userInfo) {
       if (new Date(userInfo.providerAccessTokenExpiry) < new Date()) {
@@ -49,91 +58,64 @@ const Main = ({ path }: any) => {
         handleProfileRequest();
       }
     }
-  }, [userInfo]);
+  }, [userInfo]); */
 
-  const handleProfileRequest = async () => {
+  const handleProfileRequest = async (accessToken: string) => {
     try {
       const data = await fetch(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${userInfo?.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
       const response = await data.json();
-      setUserDataGoogle(() => {
-        return { ...response, ...userInfo };
-      });
+      setUserDataFromGoogle(response);
     } catch (error) {
-      console.error("Error getting user Data:", error);
+      console.log("Error getting user Data from Google");
     }
   };
 
   useEffect(() => {
-    if (userDataGoogle) {
+    if (userDataFromGoogle) {
       handleSaveUser({
-        userId: userDataGoogle.userId,
-        email: userDataGoogle.email,
-        given_name: userDataGoogle.given_name,
-        name: userDataGoogle.name,
-        picture: userDataGoogle.picture,
-        email_verified: userDataGoogle.email_verified,
-        customData: false,
+        userId: userInfo?.userId,
+        email: userDataFromGoogle.email,
+        given_name: userDataFromGoogle.given_name,
+        name: userDataFromGoogle.name,
+        picture: userDataFromGoogle.picture,
+        email_verified: userDataFromGoogle.email_verified,
+        settings: {
+          mute_message_sound: false,
+          mute_mention: false,
+          mute_all_sounds: false,
+        },
       });
     }
-  }, [userDataGoogle]);
+  }, [userDataFromGoogle]);
 
   const handleSaveUser = async (userData: any) => {
+    if (num === 1) return;
+    setNum(1);
     try {
       console.log("saving user in database...");
       await createDocumentCustomID("Users", userData.userId, userData);
-      Get_User_Data_From_db(userData);
+      console.log("user saved...");
+      return Get_User_Data_From_db(userData);
     } catch (error) {
+      console.log("error saving user");
       console.log(error);
-      console.log("user exist in database");
-      console.log("updating userData...");
-      Get_User_Data_From_db(userData);
     }
   };
 
   const Get_User_Data_From_db = async (userData: any) => {
     try {
       const response = await getUser(userData.userId);
-      if (!response.customData) {
-        handleUpdateUser(userData);
-      } else {
-        setUserData({
-          userId: response.userId,
-          email: response.email,
-          given_name: response.given_name,
-          name: response.name,
-          picture: response.picture,
-          email_verified: response.email_verified,
-          customData: response.customData,
-        });
-      }
+      setUserData(response);
     } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleUpdateUser = async (userData: any) => {
-    try {
-      const response = await updateDocument("Users", userData.userId, userData);
-      setUserData({
-        userId: response.userId,
-        email: response.email,
-        given_name: response.given_name,
-        name: response.name,
-        picture: response.picture,
-        email_verified: response.email_verified,
-        customData: response.customData,
-      });
-      console.log("user Updated");
-    } catch (error) {
-      console.log(error);
+      console.log("error getting user data");
     }
   };
 
@@ -141,7 +123,7 @@ const Main = ({ path }: any) => {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <Header userData={userData} />
+        <Header userData={userData} setUserData={setUserData} />
 
         {path === "home" ? (
           <div className="h-full">

@@ -9,6 +9,7 @@ export function LoginForm() {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    setLoading(false);
     handleCheckSession();
   }, []);
 
@@ -43,7 +44,9 @@ export function LoginForm() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <Button
-              className="w-full cursor-pointer"
+              className={`w-full cursor-pointer ${
+                loading ? "pointer-events-none" : "pointer-events-auto"
+              }`}
               type="button"
               onClick={() => handleGoogleLogin()}
             >

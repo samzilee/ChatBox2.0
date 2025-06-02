@@ -229,12 +229,18 @@ const PostBlock = ({ postMode, setPostMode, userData, posts }: any) => {
                 }
 
                 /* list of supported file type */
-                const supportedExtensions = ["mp4", "gif", "png", "svg", "jpg"];
+                const supportedExtensions = [
+                  "mp4",
+                  "gif",
+                  "png",
+                  "svg",
+                  "jpg",
+                  "jpeg",
+                ];
                 /* return "true" or "false" */
                 const fileSupported = supportedExtensions.some((extension) =>
                   file.type.includes(extension)
                 );
-
                 /* checking if "fileSupported" is false */
                 if (!fileSupported) {
                   setError(true);

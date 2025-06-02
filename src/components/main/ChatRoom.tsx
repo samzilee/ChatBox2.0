@@ -114,15 +114,24 @@ const ChatRoom = ({ userData, setUserData }: any) => {
               const tagged = response.payload?.tagged.filter(
                 (tag: any) => tag.userId === prev.userId
               );
-
               //if current user is not tagged, message received audio will be played, else it plays mention/tagged audio.
               if (
-                prev.userId !== response.payload?.replies?.userId &&
-                tagged.length === 0
+                prev.userId === response.payload?.replies?.userId &&
+                tagged.length > 0
               ) {
-                handleRecevieMessage();
-              } else {
+                if (
+                  prev?.settings.mute_mention ||
+                  prev?.settings.mute_all_sounds
+                )
+                  return;
                 handleMention();
+              } else {
+                if (
+                  prev?.settings.mute_message_sound ||
+                  prev?.settings.mute_all_sounds
+                )
+                  return;
+                handleRecevieMessage();
               }
             } else {
               handleMessageSent();
@@ -604,7 +613,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       <section className="flex flex-col items-center relative">
         {/* scroll down button */}
         {scrollDownButton ? (
-          <div className=" absolute top-[-48px] z-50 ">
+          <div className=" absolute top-[-48px] z-[2] ">
             <button
               className="p-[6px] rounded-full cursor-pointer bg-primary"
               onClick={() => handleScrollDown("smooth")}

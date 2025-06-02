@@ -9,7 +9,7 @@ import { signOut } from "../../utils/auth.utils.ts";
 import { NavLink, useNavigate } from "react-router-dom";
 import Settings from "./Settings.tsx";
 
-const Header = ({ userData }: any) => {
+const Header = ({ userData, setUserData }: any) => {
   const { open, setOpen, openMobile, setOpenMobile, isMobile } = useSidebar();
   const [miniProfile, setMiniProfile] = useState<boolean>(false);
   const [settingsActive, setSettingsActive] = useState<boolean>(false);
@@ -167,6 +167,7 @@ const Header = ({ userData }: any) => {
               onClick={() => {
                 setMiniProfile(false);
                 setSettingsActive(true);
+                setOpen(false);
               }}
             >
               <img src={settingsIcon} alt="icon" width={20} height={20} />
@@ -188,6 +189,8 @@ const Header = ({ userData }: any) => {
         <Settings
           settingsActive={settingsActive}
           setSettingsActive={setSettingsActive}
+          userData={userData}
+          setUserData={setUserData}
         />
       </div>
     </header>
