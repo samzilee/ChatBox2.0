@@ -116,22 +116,22 @@ const ChatRoom = ({ userData, setUserData }: any) => {
               );
               //if current user is not tagged, message received audio will be played, else it plays mention/tagged audio.
               if (
-                prev.userId === response.payload?.replies?.userId &&
+                prev.userId === response.payload?.replies?.userId ||
                 tagged.length > 0
               ) {
                 if (
-                  prev?.settings.mute_mention ||
-                  prev?.settings.mute_all_sounds
-                )
-                  return;
-                handleMention();
+                  prev?.settings.mute_mention !== true &&
+                  prev?.settings.mute_all_sounds !== true
+                ) {
+                  handleMention();
+                }
               } else {
                 if (
-                  prev?.settings.mute_message_sound ||
-                  prev?.settings.mute_all_sounds
-                )
-                  return;
-                handleRecevieMessage();
+                  prev?.settings.mute_message_sound !== true &&
+                  prev?.settings.mute_all_sounds !== true
+                ) {
+                  handleRecevieMessage();
+                }
               }
             } else {
               handleMessageSent();

@@ -85,7 +85,7 @@ const Settings = ({
         muteMention === userData?.settings?.mute_mention &&
         muteAll === userData?.settings?.mute_all_sounds)
     )
-      return;
+      return null;
     try {
       setUpdatingSounds(true);
       await updateDocument("settings", userData?.settings?.$id, {
