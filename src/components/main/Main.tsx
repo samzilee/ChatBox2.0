@@ -1,6 +1,6 @@
 import { AppSidebar } from "../app-sidebar";
 import { SidebarInset, SidebarProvider } from "../ui/sidebar";
-import { getUserData, signOut } from "../../utils/auth.utils.ts";
+import { getUserData } from "../../utils/auth.utils.ts";
 import { useEffect, useState } from "react";
 import { userAppWriteInfo } from "@/utils/utils.tsx";
 
@@ -8,7 +8,7 @@ import Content from "./Content";
 import Header from "./Header";
 import ChatRoom from "./ChatRoom.tsx";
 import Alert from "../Alert.tsx";
-import { createDocumentCustomID, getUser, updateDocument } from "@/utils/db";
+import { createDocumentCustomID, getUser } from "@/utils/db";
 
 const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
