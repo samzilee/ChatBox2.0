@@ -111,10 +111,10 @@ const ChatRoom = ({ userData, setUserData }: any) => {
             // check if the current user didn't send the message, else if current user sent the message! message sent audio will be played.
             if (prev.userId !== response.payload.senderId) {
               //will return "[]" if current user is not tagged or mentioned.
-              const tagged = response.payload?.tagged.filter(
+              const tagged = response.payload?.tagged?.filter(
                 (tag: any) => tag.userId === prev.userId
               );
-              //if current user is not tagged, message received audio will be played, else it plays mention/tagged audio.
+              //if current user is not tagged, message received audio will be played else it plays mention/tagged audio.
               if (
                 prev.userId === response.payload?.replies?.userId ||
                 tagged.length > 0
@@ -163,6 +163,12 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       setThemeColor(stringToColor(userData.userId));
     }
   }, [userData]);
+
+  useEffect(() => {
+    setTagging((prevTags: any) =>
+      prevTags.filter((tag: any) => message.includes(`@${tag.userName}`))
+    );
+  }, [message]);
 
   const stringToColor = (str: string) => {
     let hash = 0;
@@ -324,8 +330,18 @@ const ChatRoom = ({ userData, setUserData }: any) => {
         return [{ userId: userId, userName: userName }, ...prev];
       });
       handleInput();
-      setClearTags(true);
+      /* setClearTags(true); */
     }
+  };
+
+  const handleClearTags = () => {
+    tagging.map((tag: any) => {
+      setMessage((prev: string) => {
+        return prev?.split(tag.userId)[1] || "";
+      });
+    });
+    setTagging([]);
+    setClearTags(false);
   };
 
   const handleScrollToView = (id: string) => {
@@ -358,16 +374,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
           chatScroll.scrollHeight - 100
       );
     }
-  };
-
-  const handleClearTags = () => {
-    tagging.map((tag: any) => {
-      setMessage((prev: string) => {
-        return prev?.split(tag.userId)[1] || "";
-      });
-    });
-    setTagging([]);
-    setClearTags(false);
   };
 
   const handleInput = () => {
@@ -428,7 +434,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="cursor-pointer"
+                          className="cursor-pointer group"
                           onClick={() =>
                             handleUpdateMessage(chat.$id, chat.text)
                           }

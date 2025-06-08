@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { AiOutlineClose } from "react-icons/ai";
 import { updateDocument } from "@/utils/db";
+import Alert from "../Alert";
 
 const Settings = ({
   settingsActive,
@@ -53,18 +54,34 @@ const Settings = ({
   const [muteAll, setMuteAll] = useState<boolean>(false);
   const [popoverActive, setPopoverActive] = useState<boolean>(false);
   const [updatingSounds, setUpdatingSounds] = useState<boolean>(false);
-  const [soundsPopOver_Bg, setSoundsPopOver_Bg] = useState<string | null>(null);
+  const [sendAlert, setSendAlert] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
 
   const name = useRef<HTMLInputElement>(null);
   const userName = useRef<HTMLInputElement>(null);
+  const popOverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (userData) {
+    if (userData && popoverActive) {
       setMuteMessage(userData?.settings?.mute_message_sound);
       setMuteMetion(userData?.settings?.mute_mention);
       setMuteAll(userData?.settings?.mute_all_sounds);
     }
   }, [userData, popoverActive]);
+
+  useEffect(() => {
+    const popoverBlock: HTMLDivElement | null = popOverRef.current;
+    const handlePopover = (event: any) => {
+      if (!popoverBlock?.contains(event?.target)) {
+        setPopoverActive(false);
+      }
+    };
+    if (popoverActive && popoverBlock) {
+      document.addEventListener("mousedown", handlePopover);
+
+      return () => document.removeEventListener("mousedown", handlePopover);
+    }
+  }, [popoverActive]);
 
   useEffect(() => {
     if (darkMode) {
@@ -94,25 +111,19 @@ const Settings = ({
         mute_message_sound: muteMessage,
       });
       setUpdatingSounds(false);
-      setSoundsPopOver_Bg("green");
+      setPopoverActive(false);
       setUserData((prev: any) => {
         prev.settings.mute_message_sound = muteMessage;
         prev.settings.mute_mention = muteMention;
         prev.settings.mute_all_sounds = muteAll;
         return prev;
       });
-      const timeOut = setTimeout(() => {
-        setSoundsPopOver_Bg(null);
-        return () => clearTimeout(timeOut);
-      }, 2000);
     } catch (error) {
       console.log(error);
+      setPopoverActive(false);
       setUpdatingSounds(false);
-      setSoundsPopOver_Bg("red");
-      const timeOut = setTimeout(() => {
-        setSoundsPopOver_Bg(null);
-        return () => clearTimeout(timeOut);
-      }, 2000);
+      setSendAlert(true);
+      setAlertMessage("Failed to make changes...");
     }
   };
 
@@ -265,7 +276,7 @@ const Settings = ({
             </div>
           </div>
 
-          <Popover>
+          <Popover open={popoverActive}>
             <Label>Chat Room</Label>
             <PopoverTrigger>
               <div
@@ -285,13 +296,7 @@ const Settings = ({
                 </div>
               </div>
             </PopoverTrigger>
-            <PopoverContent
-              className={
-                !soundsPopOver_Bg
-                  ? ""
-                  : `transition-colors duration-[0.3s] bg-${soundsPopOver_Bg}-900`
-              }
-            >
+            <PopoverContent ref={popOverRef}>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h4 className="font-bold ">Sounds</h4>
@@ -394,6 +399,9 @@ const Settings = ({
           </Popover>
         </main>
       </div>
+      {sendAlert ? (
+        <Alert message={alertMessage} setActive={setSendAlert} />
+      ) : null}
     </div>
   );
 };
