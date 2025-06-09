@@ -307,7 +307,7 @@ const Content = ({
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-foreground">
-                            {post.user?.name}
+                            {post.user?.given_name}
                           </p>
                           <p className="text-muted-foreground text-[13px]">
                             {formatDate(new Date(post.$createdAt))}

@@ -52,6 +52,7 @@ const CommentMode = ({
             userId: userData.userId,
             email: userData.email,
             name: userData.name || userData.given_name,
+            given_name: userData.given_name,
             picture: userData.picture,
             email_verified: userData.email_verified,
           },
@@ -205,7 +206,7 @@ const CommentMode = ({
 
                       <div className="bg-background px-3 pt-1 pb-2 rounded-lg">
                         <p>
-                          {comment.user.name}{" "}
+                          @{comment.user.given_name}{" "}
                           <span className="text-[12px] text-muted-foreground font-semibold">
                             {formatDate(new Date(comment.$createdAt))}
                           </span>{" "}

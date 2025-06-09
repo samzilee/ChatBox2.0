@@ -59,6 +59,9 @@ const Settings = ({
   const [localProfileUrl, setLocalProfileUrl] = useState<any>(null);
   const [profilePicFile, setProfilePicFile] = useState<any>(null);
   const [loading_PF, setLoading_PF] = useState<boolean>(false);
+  const [PFerror, setPFerror] = useState<string>(
+    "error making changes to profile..."
+  );
 
   const profilePicRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -106,6 +109,9 @@ const Settings = ({
     );
     /* checking if "fileSupported" is false */
     if (!fileSupported) {
+      setPFerror(
+        "file is not supported, please provide a file that includes 'GIf, PNG, SVG, JPG, JPEG'"
+      );
       return setLocalProfileUrl(null), setProfilePicFile(null);
     } else {
       setLocalProfileUrl(URL.createObjectURL(file));
@@ -120,13 +126,17 @@ const Settings = ({
       return result;
     } catch (error) {
       console.log(error);
+      setPFerror(
+        "couldn't get file from database... please reload the page and try again"
+      );
     }
   };
 
   const handleManageChanges = async () => {
-    if (loading_PF) return;
+    if (loading_PF) return setPFerror("");
     try {
       setLoading_PF(true);
+      setPFerror("");
       if (profilePicFile) {
         //checking is profile was changed befor
         if (userData.customProfilePic) {
@@ -143,11 +153,14 @@ const Settings = ({
         userNameRef?.current?.value !== ""
       ) {
         console.log("updating profile...");
-
         handleUpdateProfile2();
+      } else {
+        setLoading_PF(false);
       }
     } catch (error) {
       console.log(error);
+      setLoading_PF(false);
+      setPFerror("error making changes to profile...");
     }
   };
 
@@ -158,13 +171,14 @@ const Settings = ({
     const name = nameRef?.current?.value;
     const userName = userNameRef?.current?.value;
     try {
-      await updateDocument("users", userData.$id, {
+      const result = await updateDocument("users", userData.$id, {
         picture: newProfile.href,
         customProfilePic: true,
         given_name: userName?.split("@")[1],
         name: name,
         settings: { profile_fileId: newProfileId },
       });
+      setUserData(result);
       setLoading_PF(false);
     } catch (error) {
       console.log(error);
@@ -176,10 +190,11 @@ const Settings = ({
     const name = nameRef?.current?.value;
     const userName = userNameRef?.current?.value;
     try {
-      await updateDocument("users", userData.$id, {
+      const result = await updateDocument("users", userData.$id, {
         given_name: userName?.split("@")[1],
         name: name,
       });
+      setUserData(result);
       setLoading_PF(false);
     } catch (error) {
       console.log(error);
@@ -225,6 +240,9 @@ const Settings = ({
         settingsActive ? "block" : "hidden"
       } fixed top-0 bottom-0 left-0 right-0 flex items-center justify-center z-50`}
     >
+      {sendAlert ? (
+        <Alert message={alertMessage} setActive={setSendAlert} />
+      ) : null}
       {/* BackGround  */}
       <div
         className={`fixed border top-0 bottom-0 right-0 left-0 bg-gray-500/60 flex justify-center items-center`}
@@ -324,6 +342,9 @@ const Settings = ({
                     </p>
                   </div>
                 </div>
+                <div className="w-full text-red-500 font-[arial] text-[13px]">
+                  <p>{PFerror}</p>
+                </div>
               </SheetHeader>
               <div className="grid flex-1 auto-rows-min gap-6 px-4">
                 <div className="grid gap-3">
@@ -343,10 +364,15 @@ const Settings = ({
                   />
                 </div>
               </div>
+
               <SheetFooter className="pb-7">
-                <Button type="submit" onClick={() => handleManageChanges()}>
+                <Button
+                  type="submit"
+                  onClick={() => handleManageChanges()}
+                  className="cursor-pointer"
+                >
                   {loading_PF ? (
-                    <div className="h-5 w-5 border-2 border-t-transparent animate-spin rounded-full"></div>
+                    <div className="h-5 w-5 border-2 border-primary-foreground border-t-transparent animate-spin rounded-full"></div>
                   ) : (
                     "Save changes"
                   )}
@@ -511,9 +537,6 @@ const Settings = ({
           </Popover>
         </main>
       </div>
-      {sendAlert ? (
-        <Alert message={alertMessage} setActive={setSendAlert} />
-      ) : null}
     </div>
   );
 };

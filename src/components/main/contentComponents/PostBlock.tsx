@@ -115,6 +115,7 @@ const PostBlock = ({ postMode, setPostMode, userData, posts }: any) => {
           email: userData.email,
           name: userData.name || userData.given_name,
           picture: userData.picture,
+          given_name: userData.given_name,
           email_verified: userData.email_verified,
         },
       });

@@ -9,7 +9,6 @@ import Header from "./Header";
 import ChatRoom from "./ChatRoom.tsx";
 import Alert from "../Alert.tsx";
 import { createDocumentCustomID, getUser, listDocument } from "@/utils/db";
-import { client } from "@/utils/appWrite.ts";
 
 const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
@@ -34,16 +33,6 @@ const Main = ({ path }: any) => {
   useEffect(() => {
     handleUserData();
     handleGetAllUsers();
-
-    const unsubscribe = client.subscribe(
-      `databases.chat_box.collections.users.documents`,
-      (response: any) =>
-        setUserData(() => {
-          return response.payload;
-        })
-    );
-
-    return () => unsubscribe();
   }, []);
 
   const handleUserData = async () => {
