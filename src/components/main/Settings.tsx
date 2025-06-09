@@ -350,7 +350,7 @@ const Settings = ({
                   className={`${
                     loading_PF
                       ? "opacity-50 pointer-events-none"
-                      : "cursor-pointer"
+                      : "cursor-pointer pointer-events-auto"
                   }`}
                 >
                   {loading_PF ? (
