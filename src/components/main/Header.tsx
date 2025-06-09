@@ -102,7 +102,7 @@ const Header = ({ userData, setUserData }: any) => {
             loading="lazy"
             src={userData.picture}
             alt="avatar"
-            className="w-[40px] rounded-full cursor-pointer bg-card"
+            className="w-[40px] h-[40px] rounded-full cursor-pointer bg-card"
             onClick={handleMenu}
           />
         ) : (

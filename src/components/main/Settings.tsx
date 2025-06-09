@@ -59,9 +59,7 @@ const Settings = ({
   const [localProfileUrl, setLocalProfileUrl] = useState<any>(null);
   const [profilePicFile, setProfilePicFile] = useState<any>(null);
   const [loading_PF, setLoading_PF] = useState<boolean>(false);
-  const [PFerror, setPFerror] = useState<string>(
-    "error making changes to profile..."
-  );
+  const [PFerror, setPFerror] = useState<string>();
 
   const profilePicRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -101,6 +99,19 @@ const Settings = ({
 
   const handleChangeProfilePicLocaly = (event: any) => {
     const file = event.target.files[0];
+
+    //if file size is over 1Mb return an error
+    if (file.size / (1024 * 1024) > 2) {
+      return setPFerror(
+        `The file you selected is too large(${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(
+          2
+        )} MB). Maximum allowed size is 1MB. Please choose a smaller file.`
+      );
+    }
+
     /* list of supported file type */
     const supportedExtensions = ["gif", "png", "svg", "jpg", "jpeg"];
     /* return "true" or "false" */
@@ -134,6 +145,9 @@ const Settings = ({
 
   const handleManageChanges = async () => {
     if (loading_PF) return setPFerror("");
+    if (userNameRef?.current?.value.includes(" ")) {
+      return setPFerror("User name must not include space.");
+    }
     try {
       setLoading_PF(true);
       setPFerror("");
