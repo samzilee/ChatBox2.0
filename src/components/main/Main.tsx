@@ -26,6 +26,12 @@ const Main = ({ path }: any) => {
   const [forbidden2, setForbidden2] = useState<string>("");
 
   useEffect(() => {
+    if (allusers) {
+      console.log(allusers);
+    }
+  }, [allusers]);
+
+  useEffect(() => {
     handleUserData();
     handleGetAllUsers();
 

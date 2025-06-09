@@ -29,7 +29,6 @@ import {
 import { AiOutlineClose } from "react-icons/ai";
 import { createFile, deleteFile, getFile, updateDocument } from "@/utils/db";
 import Alert from "../Alert";
-import { PopoverClose } from "@radix-ui/react-popover";
 
 const Settings = ({
   settingsActive,
