@@ -125,6 +125,7 @@ const Settings = ({
   };
 
   const handleManageChanges = async () => {
+    if (loading_PF) return;
     try {
       setLoading_PF(true);
       if (profilePicFile) {
@@ -344,15 +345,7 @@ const Settings = ({
                 </div>
               </div>
               <SheetFooter className="pb-7">
-                <Button
-                  type="submit"
-                  onClick={() => handleManageChanges()}
-                  className={`${
-                    loading_PF
-                      ? "opacity-50 pointer-events-none"
-                      : "cursor-pointer pointer-events-auto"
-                  }`}
-                >
+                <Button type="submit" onClick={() => handleManageChanges()}>
                   {loading_PF ? (
                     <div className="h-5 w-5 border-2 border-t-transparent animate-spin rounded-full"></div>
                   ) : (
