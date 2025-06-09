@@ -1,6 +1,6 @@
 import { AppSidebar } from "../app-sidebar";
 import { SidebarInset, SidebarProvider } from "../ui/sidebar";
-import { getUserData } from "../../utils/auth.utils.ts";
+import { getUserData, signOut } from "../../utils/auth.utils.ts";
 import { useEffect, useState } from "react";
 import { userAppWriteInfo } from "@/utils/utils.tsx";
 
@@ -8,21 +8,36 @@ import Content from "./Content";
 import Header from "./Header";
 import ChatRoom from "./ChatRoom.tsx";
 import Alert from "../Alert.tsx";
-import { createDocumentCustomID, getUser } from "@/utils/db";
+import { createDocumentCustomID, getUser, listDocument } from "@/utils/db";
+import { client } from "@/utils/appWrite.ts";
 
 const Main = ({ path }: any) => {
   const [userInfo, setUserInfo] = useState<userAppWriteInfo | undefined>(
     undefined
   );
   const [userData, setUserData] = useState<any>(null);
+  const [allusers, setAllusers] = useState<any>(null);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [sendAlert, setSendAlert] = useState<boolean>(false);
   const [userDataFromGoogle, setUserDataFromGoogle] = useState<any>(null);
   const [num, setNum] = useState<number>(0);
+  const [forbidden1, setForbidden1] = useState<string>("");
+  const [forbidden2, setForbidden2] = useState<string>("");
 
   useEffect(() => {
     handleUserData();
+    handleGetAllUsers();
+
+    const unsubscribe = client.subscribe(
+      `databases.chat_box.collections.users.documents`,
+      (response: any) =>
+        setUserData(() => {
+          return response.payload;
+        })
+    );
+
+    return () => unsubscribe();
   }, []);
 
   const handleUserData = async () => {
@@ -35,6 +50,15 @@ const Main = ({ path }: any) => {
       });
       handleProfileRequest(data.providerAccessToken);
     } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  const handleGetAllUsers = async () => {
+    try {
+      const response = await listDocument("users", "new-to-old");
+      setAllusers(response);
+    } catch (error) {
       console.log(error);
     }
   };
@@ -74,13 +98,13 @@ const Main = ({ path }: any) => {
       const response = await data.json();
       setUserDataFromGoogle(response);
     } catch (error) {
-      console.log("Error getting user Data from Google");
+      console.log("Error getting user Data from Google:", error);
     }
   };
 
   useEffect(() => {
     if (userDataFromGoogle) {
-      handleSaveUser({
+      handleSaveUserToDB({
         userId: userInfo?.userId,
         email: userDataFromGoogle.email,
         given_name: userDataFromGoogle.given_name,
@@ -88,6 +112,7 @@ const Main = ({ path }: any) => {
         picture: userDataFromGoogle.picture,
         email_verified: userDataFromGoogle.email_verified,
         settings: {
+          $id: userInfo?.userId,
           mute_message_sound: false,
           mute_mention: false,
           mute_all_sounds: false,
@@ -96,17 +121,18 @@ const Main = ({ path }: any) => {
     }
   }, [userDataFromGoogle]);
 
-  const handleSaveUser = async (userData: any) => {
+  const handleSaveUserToDB = async (userData: any) => {
     if (num === 1) return;
     setNum(1);
     try {
       console.log("saving user in database...");
-      await createDocumentCustomID("Users", userData.userId, userData);
+      await createDocumentCustomID("users", userData.userId, userData);
       console.log("user saved...");
-      return Get_User_Data_From_db(userData);
+      Get_User_Data_From_db(userData);
     } catch (error) {
       console.log("error saving user");
       console.log(error);
+      setForbidden1("saving");
     }
   };
 
@@ -116,8 +142,18 @@ const Main = ({ path }: any) => {
       setUserData(response);
     } catch (error) {
       console.log("error getting user data");
+      setForbidden2("other");
     }
   };
+
+  if (
+    userInfo &&
+    forbidden1 === "saving" &&
+    forbidden2 === "other" &&
+    new Date(userInfo.providerAccessTokenExpiry) < new Date()
+  ) {
+    signOut();
+  }
 
   return (
     <SidebarProvider>

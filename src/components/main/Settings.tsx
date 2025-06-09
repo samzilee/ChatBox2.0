@@ -27,8 +27,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { AiOutlineClose } from "react-icons/ai";
-import { updateDocument } from "@/utils/db";
+import { createFile, deleteFile, getFile, updateDocument } from "@/utils/db";
 import Alert from "../Alert";
+import { PopoverClose } from "@radix-ui/react-popover";
 
 const Settings = ({
   settingsActive,
@@ -56,9 +57,13 @@ const Settings = ({
   const [updatingSounds, setUpdatingSounds] = useState<boolean>(false);
   const [sendAlert, setSendAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+  const [localProfileUrl, setLocalProfileUrl] = useState<any>(null);
+  const [profilePicFile, setProfilePicFile] = useState<any>(null);
+  const [loading_PF, setLoading_PF] = useState<boolean>(false);
 
-  const name = useRef<HTMLInputElement>(null);
-  const userName = useRef<HTMLInputElement>(null);
+  const profilePicRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const userNameRef = useRef<HTMLInputElement>(null);
   const popOverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,18 +75,19 @@ const Settings = ({
   }, [userData, popoverActive]);
 
   useEffect(() => {
-    const popoverBlock: HTMLDivElement | null = popOverRef.current;
+    const popoverBlock: any = popOverRef.current;
     const handlePopover = (event: any) => {
       if (!popoverBlock?.contains(event?.target)) {
         setPopoverActive(false);
       }
     };
-    if (popoverActive && popoverBlock) {
+
+    if (popoverActive) {
       document.addEventListener("mousedown", handlePopover);
 
       return () => document.removeEventListener("mousedown", handlePopover);
     }
-  }, [popoverActive]);
+  }, [popoverActive, popOverRef]);
 
   useEffect(() => {
     if (darkMode) {
@@ -91,8 +97,94 @@ const Settings = ({
     }
   }, [darkMode]);
 
-  const handleUpdateProfile = () => {
-    console.log(name.current?.value, userName.current?.value);
+  const handleChangeProfilePicLocaly = (event: any) => {
+    const file = event.target.files[0];
+    /* list of supported file type */
+    const supportedExtensions = ["gif", "png", "svg", "jpg", "jpeg"];
+    /* return "true" or "false" */
+    const fileSupported = supportedExtensions.some((extension) =>
+      file.type.includes(extension)
+    );
+    /* checking if "fileSupported" is false */
+    if (!fileSupported) {
+      return setLocalProfileUrl(null), setProfilePicFile(null);
+    } else {
+      setLocalProfileUrl(URL.createObjectURL(file));
+      setProfilePicFile(file);
+    }
+  };
+
+  const handleGetfile = async (fileId: string) => {
+    try {
+      console.log("getting new Profile_Pic_View");
+      const result = getFile(fileId);
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleManageChanges = async () => {
+    try {
+      setLoading_PF(true);
+      if (profilePicFile) {
+        //checking is profile was changed befor
+        if (userData.customProfilePic) {
+          //deleting previous file created
+          console.log("deleting previous file created...");
+          await deleteFile(userData.settings.profile_fileId);
+        }
+        console.log("creating File...");
+        const result = await createFile(profilePicFile);
+        const response = await handleGetfile(result.$id);
+        handleUpdateProfile1(response, result.$id);
+      } else if (
+        nameRef?.current?.value !== "" &&
+        userNameRef?.current?.value !== ""
+      ) {
+        console.log("updating profile...");
+
+        handleUpdateProfile2();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleUpdateProfile1 = async (
+    newProfile: any,
+    newProfileId: string | undefined
+  ) => {
+    const name = nameRef?.current?.value;
+    const userName = userNameRef?.current?.value;
+    try {
+      await updateDocument("users", userData.$id, {
+        picture: newProfile.href,
+        customProfilePic: true,
+        given_name: userName?.split("@")[1],
+        name: name,
+        settings: { profile_fileId: newProfileId },
+      });
+      setLoading_PF(false);
+    } catch (error) {
+      console.log(error);
+      setLoading_PF(false);
+    }
+  };
+
+  const handleUpdateProfile2 = async () => {
+    const name = nameRef?.current?.value;
+    const userName = userNameRef?.current?.value;
+    try {
+      await updateDocument("users", userData.$id, {
+        given_name: userName?.split("@")[1],
+        name: name,
+      });
+      setLoading_PF(false);
+    } catch (error) {
+      console.log(error);
+      setLoading_PF(false);
+    }
   };
 
   const updateNotificationSettings = async () => {
@@ -204,15 +296,27 @@ const Settings = ({
             <SheetContent side="right">
               <SheetHeader>
                 <div className="flex items-center gap-2 py-5 border-b border-border">
-                  <div className="h-[70px] w-[70px] relative cursor-pointer">
+                  <Label
+                    htmlFor="ChangeProfile"
+                    className="h-[70px] w-[70px] relative cursor-pointer"
+                  >
+                    <Input
+                      id="ChangeProfile"
+                      ref={profilePicRef}
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => handleChangeProfilePicLocaly(e)}
+                    />
                     <img
-                      src={userData?.picture}
+                      src={
+                        localProfileUrl ? localProfileUrl : userData?.picture
+                      }
                       className="size-full z-[-1] rounded-full"
                     />
                     <div className="absolute right-0 bottom-0 bg-accent rounded-full w-6 h-6 p-1">
                       <PencilLineIcon className="size-full" />
                     </div>
-                  </div>
+                  </Label>
                   <div>
                     <p className="text-[16px]">{userData?.name}</p>
                     <p className="text-[13px] text-muted-foreground">
@@ -224,20 +328,36 @@ const Settings = ({
               <div className="grid flex-1 auto-rows-min gap-6 px-4">
                 <div className="grid gap-3">
                   <Label htmlFor="name">Name</Label>
-                  <Input ref={name} id="name" defaultValue={userData?.name} />
+                  <Input
+                    ref={nameRef}
+                    id="name"
+                    defaultValue={userData?.name}
+                  />
                 </div>
                 <div className="grid gap-3">
                   <Label htmlFor="username">Username</Label>
                   <Input
-                    ref={userName}
+                    ref={userNameRef}
                     id="username"
                     defaultValue={`@${userData?.given_name}`}
                   />
                 </div>
               </div>
-              <SheetFooter>
-                <Button type="submit" onClick={() => handleUpdateProfile()}>
-                  Save changes
+              <SheetFooter className="pb-7">
+                <Button
+                  type="submit"
+                  onClick={() => handleManageChanges()}
+                  className={`${
+                    loading_PF
+                      ? "opacity-50 pointer-events-none"
+                      : "cursor-pointer"
+                  }`}
+                >
+                  {loading_PF ? (
+                    <div className="h-5 w-5 border-2 border-t-transparent animate-spin rounded-full"></div>
+                  ) : (
+                    "Save changes"
+                  )}
                 </Button>
                 <SheetClose asChild>
                   <Button variant="outline">Close</Button>

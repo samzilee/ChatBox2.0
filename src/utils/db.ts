@@ -55,10 +55,8 @@ const updateDocument = async (collectionID:string,documentID:string, data:any) =
 
 const getUser = async (userId:string) => {
     const response = await databases.getDocument("chat_box", "users", userId)
-
     return response;
 }
-
 
 
 
