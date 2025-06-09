@@ -481,14 +481,14 @@ const ChatRoom = ({ userData, setUserData }: any) => {
                         ></div>
                         <div className="flex-1 flex flex-col pr-2 py-1">
                           <p
-                            className="text-[13px]"
+                            className="text-[13px] select-none"
                             style={{ color: chat.replies.themeColor }}
                           >
                             {chat.replies.name === userData.name
                               ? "You"
                               : chat.replies.name}
                           </p>
-                          <p className="text-[12px] text-muted-foreground">
+                          <p className="text-[12px] text-muted-foreground select-none">
                             {chat.replies.text.length > 150
                               ? chat.replies.text.slice(0, 150) + "..."
                               : chat.replies.text}
@@ -499,7 +499,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
 
                     <div className="flex flex-col">
                       {/* text */}
-                      <p className="text-[14px] whitespace-pre-wrap">
+                      <p className="text-[14px] whitespace-pre-wrap select-none">
                         {chat.tagged.length > 0
                           ? renderTaggedText(chat.text, chat.tagged)
                           : chat.text}
@@ -507,7 +507,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
 
                       <div className="flex gap-3 justify-between">
                         {/* date */}
-                        <p className="text-[12px] text-gray-200/65 font-semibold text-end ">
+                        <p className="text-[12px] text-gray-200/65 font-semibold text-end select-none">
                           {formatDate(new Date(chat.$createdAt))}
                         </p>
                         <p
