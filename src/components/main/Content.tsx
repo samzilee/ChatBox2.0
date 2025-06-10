@@ -293,9 +293,7 @@ const Content = ({
                               loading="lazy"
                               src={post.user.picture}
                               alt="avatar"
-                              width={45}
-                              height={45}
-                              className=" rounded-full bg-background"
+                              className="w-[45px] h-[45px] rounded-full bg-background"
                             />
                           ) : (
                             <MdAccountCircle size={45} />

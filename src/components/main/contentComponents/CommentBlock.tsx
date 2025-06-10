@@ -139,9 +139,7 @@ const CommentMode = ({
                   loading="lazy"
                   src={postToComment.user.picture}
                   alt="avatar"
-                  width={45}
-                  height={45}
-                  className=" rounded-full bg-background"
+                  className="w-[45px] h-[45px] rounded-full bg-background"
                 />
               </div>
               <div className="flex-1">

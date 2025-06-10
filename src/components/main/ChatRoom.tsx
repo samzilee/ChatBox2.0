@@ -1,5 +1,5 @@
 import { ArrowDown, Pen, SendHorizonalIcon, Trash } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { formatDate } from "../FormatDate";
 import {
   createDocument,
@@ -31,7 +31,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
   const [scrollDownButton, setScrollDownButton] = useState<boolean>(false);
   const [editMessageMode, setEditMessageMobe] = useState<boolean>(false);
   const [tagging, setTagging] = useState<any>([]);
-  const [clearTags, setClearTags] = useState<boolean>(false);
   const [themeColor, setThemeColor] = useState<string>("");
 
   const sendAudioRef = useRef<HTMLAudioElement>(null);
@@ -156,7 +155,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
         top: chatScroll.scrollHeight,
       });
     }
-  }, [chats]);
+  }, [chats, scrollElement]);
 
   useEffect(() => {
     if (userData) {
@@ -184,8 +183,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       setLoadingChat(true);
       const response = await listDocument("mainroom", "old-to-new");
       setLoadingChat(false);
-      setChats(response.documents);
-      handleScrollDown("instant");
+      return setChats(response.documents), handleScrollDown("instant");
     } catch (error) {
       console.log(error);
       setLoadingChat(false);
@@ -330,7 +328,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
         return [{ userId: userId, userName: userName }, ...prev];
       });
       handleInput();
-      /* setClearTags(true); */
     }
   };
 
@@ -341,7 +338,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       });
     });
     setTagging([]);
-    setClearTags(false);
   };
 
   const handleScrollToView = (id: string) => {
@@ -619,7 +615,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       <section className="flex flex-col items-center relative">
         {/* scroll down button */}
         {scrollDownButton ? (
-          <div className=" absolute top-[-48px] z-[2] ">
+          <div className=" absolute top-[-48px] z-[2]">
             <button
               className="p-[6px] rounded-full cursor-pointer bg-primary"
               onClick={() => handleScrollDown("smooth")}
@@ -629,7 +625,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
           </div>
         ) : null}
 
-        <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1  ">
+        <div className="bg-input p-2 rounded-lg mb-5 md:w-[80%] w-[95%]  flex flex-col gap-1 ">
           {reply && !reply.oldTextToUpDate ? (
             <div
               className="bg-card w-full flex  rounded cursor-pointer gap-1
@@ -713,6 +709,9 @@ const ChatRoom = ({ userData, setUserData }: any) => {
               className="outline-none flex-1 resize-none overflow-hidden text-[16px]"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onFocus={(e: any) => {
+                e.target.scrollIntoView();
+              }}
             />
             <button
               className="size-fit cursor-pointer sticky top-0"
@@ -729,20 +728,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
               )}
             </button>
           </div>
-
-          {/* clear tag button */}
-          {clearTags ? (
-            <div>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="cursor-pointer"
-                onClick={() => handleClearTags()}
-              >
-                Clear Tags
-              </Button>
-            </div>
-          ) : null}
         </div>
       </section>
 
