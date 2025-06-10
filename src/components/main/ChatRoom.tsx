@@ -22,6 +22,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
 
   const [loadingChat, setLoadingChat] = useState<Boolean>(false);
   const [chats, setChats] = useState<any>([]);
+  const [list1stChat, setList1stChat] = useState<boolean>(true);
   const [reply, setReply] = useState<any>(null);
   const [message, setMessage] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
@@ -79,6 +80,9 @@ const ChatRoom = ({ userData, setUserData }: any) => {
     const unsubscribe = client.subscribe(
       `databases.chat_box.collections.mainroom.documents`,
       (response: any) => {
+        setList1stChat((prev: boolean) => {
+          return !prev;
+        });
         if (
           response.events.includes(
             "databases.*.collections.*.documents.*.delete"
@@ -144,6 +148,12 @@ const ChatRoom = ({ userData, setUserData }: any) => {
   }, []);
 
   useEffect(() => {
+    if (chats && list1stChat) {
+      return handleScrollDown("instant");
+    }
+  }, [chats, list1stChat, scrollElement]);
+
+  useEffect(() => {
     const chatScroll = scrollElement.current;
     if (
       chats.length > 0 &&
@@ -184,7 +194,6 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       const response = await listDocument("mainroom", "old-to-new");
       setLoadingChat(false);
       setChats(response.documents);
-      return handleScrollDown("instant");
     } catch (error) {
       console.log(error);
       setLoadingChat(false);
@@ -616,7 +625,18 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       <section
         className="flex flex-col items-center relative"
         onClick={(e: any) => {
-          e.target.scrollIntoView();
+          const scrollInputToView1 = setTimeout(() => {
+            e.target.scrollIntoView();
+            clearTimeout(scrollInputToView1);
+          }, 1000);
+          const scrollInputToView2 = setTimeout(() => {
+            e.target.scrollIntoView();
+            clearTimeout(scrollInputToView2);
+          }, 2000);
+          const scrollInputToView3 = setTimeout(() => {
+            e.target.scrollIntoView();
+            clearTimeout(scrollInputToView3);
+          }, 3000);
         }}
       >
         {/* scroll down button */}
@@ -709,6 +729,8 @@ const ChatRoom = ({ userData, setUserData }: any) => {
 
           <div className="flex gap-1 overflow-y-auto custom-scrollbar max-h-[100px] px-2">
             <textarea
+              id="chatRoomTextInput"
+              autoComplete="off"
               ref={textareaRef}
               onInput={handleInput}
               placeholder="Write a comment..."
