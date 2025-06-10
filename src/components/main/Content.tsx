@@ -232,7 +232,7 @@ const Content = ({
 
           {/* Post Input */}
           <div className="w-full rounded-md p-2 mt-5 bg-card text-card-foreground flex items-center gap-2">
-            <div className="w-[43px] cursor-pointer rounded-full">
+            <div className="w-[43px] h-[43px] cursor-pointer rounded-full">
               {userData ? (
                 <img
                   loading="lazy"
@@ -287,13 +287,13 @@ const Content = ({
                       key={index}
                     >
                       <section className="flex items-center gap-2 px-4 pt-5">
-                        <div className="relative group cursor-pointer">
+                        <div className="relative group cursor-pointer w-[45px] h-[45px]">
                           {post.user && post.user.picture ? (
                             <img
                               loading="lazy"
                               src={post.user.picture}
                               alt="avatar"
-                              className="w-[45px] h-[45px] rounded-full bg-background"
+                              className="size-full rounded-full bg-background"
                             />
                           ) : (
                             <MdAccountCircle size={45} />

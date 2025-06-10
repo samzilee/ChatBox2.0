@@ -134,12 +134,12 @@ const CommentMode = ({
         <main className="gap-2 pb-5 flex-1 overflow-y-auto ">
           <section className="px-4 pt-2 mb-4">
             <div className="flex items-center gap-2">
-              <div>
+              <div className="w-[45px] h-[45px] rounded-full bg-background overflow-hidden">
                 <img
                   loading="lazy"
                   src={postToComment.user.picture}
                   alt="avatar"
-                  className="w-[45px] h-[45px] rounded-full bg-background"
+                  className="size-full"
                 />
               </div>
               <div className="flex-1">
