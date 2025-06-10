@@ -614,8 +614,14 @@ const ChatRoom = ({ userData, setUserData }: any) => {
 
       <section
         className="flex flex-col items-center relative"
-        onClick={(e: any) => {
-          e.target.scrollIntoView();
+        onClick={() => {
+          const scrollToInputView = setTimeout(() => {
+            document.body.scroll({
+              top: document.body.scrollHeight,
+              behavior: "instant",
+            });
+            clearTimeout(scrollToInputView);
+          }, 2000);
         }}
       >
         {/* scroll down button */}
