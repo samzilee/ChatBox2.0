@@ -155,7 +155,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
         top: chatScroll.scrollHeight,
       });
     }
-  }, [chats, scrollElement]);
+  }, [sending, scrollElement]);
 
   useEffect(() => {
     if (userData) {
@@ -183,7 +183,8 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       setLoadingChat(true);
       const response = await listDocument("mainroom", "old-to-new");
       setLoadingChat(false);
-      return setChats(response.documents), handleScrollDown("instant");
+      setChats(response.documents);
+      return handleScrollDown("instant");
     } catch (error) {
       console.log(error);
       setLoadingChat(false);
@@ -614,12 +615,9 @@ const ChatRoom = ({ userData, setUserData }: any) => {
 
       <section
         className="flex flex-col items-center relative"
-        onClick={() => {
+        onClick={(e: any) => {
           const scrollToInputView = setTimeout(() => {
-            document.body.scroll({
-              top: document.body.scrollHeight,
-              behavior: "instant",
-            });
+            e.target.scrollIntoView();
             clearTimeout(scrollToInputView);
           }, 2000);
         }}
