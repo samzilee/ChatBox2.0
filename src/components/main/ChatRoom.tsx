@@ -628,8 +628,8 @@ const ChatRoom = ({ userData, setUserData }: any) => {
           const target: HTMLElement = e.target;
 
           const observer = new ResizeObserver(() => {
+            console.log("hmmm...");
             target.scrollIntoView({ behavior: "instant" });
-            observer.disconnect(); //stop observing after first resize
           });
 
           observer.observe(document.body);
