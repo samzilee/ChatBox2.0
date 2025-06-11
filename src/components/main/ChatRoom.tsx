@@ -625,6 +625,19 @@ const ChatRoom = ({ userData, setUserData }: any) => {
       <section
         className="flex flex-col items-center relative"
         onClick={(e: any) => {
+          const target: HTMLElement = e.target;
+
+          const observer = new ResizeObserver(() => {
+            target.scrollIntoView({ behavior: "instant" });
+            observer.disconnect(); //stop observing after first resize
+          });
+
+          observer.observe(target);
+
+          /*   const scrollInputToView0 = setTimeout(() => {
+            e.target.scrollIntoView();
+            clearTimeout(scrollInputToView0);
+          }, 500);
           const scrollInputToView1 = setTimeout(() => {
             e.target.scrollIntoView();
             clearTimeout(scrollInputToView1);
@@ -636,7 +649,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
           const scrollInputToView3 = setTimeout(() => {
             e.target.scrollIntoView();
             clearTimeout(scrollInputToView3);
-          }, 3000);
+          }, 3000); */
         }}
       >
         {/* scroll down button */}

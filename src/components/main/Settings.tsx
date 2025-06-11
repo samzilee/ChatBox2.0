@@ -75,16 +75,14 @@ const Settings = ({
   }, [userData, popoverActive]);
 
   useEffect(() => {
-    const popoverBlock: any = popOverRef.current;
     const handlePopover = (event: any) => {
-      if (!popoverBlock?.contains(event?.target)) {
+      if (!popOverRef.current?.contains(event?.target)) {
         setPopoverActive(false);
       }
     };
 
     if (popoverActive) {
       document.addEventListener("mousedown", handlePopover);
-
       return () => document.removeEventListener("mousedown", handlePopover);
     }
   }, [popoverActive, popOverRef]);
@@ -471,7 +469,7 @@ const Settings = ({
                     </label>
                     <Input
                       type="checkbox"
-                      className="size-[20px]"
+                      className="size-[20px] cursor-pointer"
                       checked={muteMessage}
                       onChange={() =>
                         setMuteMessage((prev) => {
@@ -498,7 +496,7 @@ const Settings = ({
                     </label>
                     <Input
                       type="checkbox"
-                      className="size-[20px]"
+                      className="size-[20px] cursor-pointer"
                       checked={muteMention}
                       onChange={() =>
                         setMuteMetion((prev) => {
@@ -517,7 +515,7 @@ const Settings = ({
                     </label>
                     <Input
                       type="checkbox"
-                      className="size-[20px]"
+                      className="size-[20px] cursor-pointer"
                       checked={muteAll}
                       onChange={() => {
                         setMuteAll((prev) => {
