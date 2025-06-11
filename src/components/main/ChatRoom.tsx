@@ -351,9 +351,9 @@ const ChatRoom = ({ userData, setUserData }: any) => {
   };
 
   const handleScrollToView = (id: string) => {
-    const element = document.getElementById(id);
+    const element: HTMLElement | null = document.getElementById(id);
     if (element) {
-      element.scrollIntoView();
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
       element.style.backgroundColor = "rgba(170,170,170,0.241)";
       const clearStyle = setTimeout(() => {
         element.style.backgroundColor = "transparent";
@@ -632,7 +632,7 @@ const ChatRoom = ({ userData, setUserData }: any) => {
             observer.disconnect(); //stop observing after first resize
           });
 
-          observer.observe(target);
+          observer.observe(document.body);
 
           /*   const scrollInputToView0 = setTimeout(() => {
             e.target.scrollIntoView();
